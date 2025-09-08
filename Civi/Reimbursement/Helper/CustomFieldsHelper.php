@@ -36,10 +36,10 @@ final class CustomFieldsHelper {
    * @phpstan-param array<fieldT> $entityFields
    *   Field spec of fields returned by getFields action.
    *
-   * @phpstan-return list<fieldT>
+   * @phpstan-return array<string, fieldT>
    *   Public custom fields in $entityFields ordered by their custom field
-   *   weight ascending. The "required" flag is set to the value of
-   *   CustomField.is_required.
+   *   weight ascending. Key is the field name. The "required" flag is set to
+   *   the value of CustomField.is_required.
    */
   public function getPublicFieldsOrderedByWeight(array $entityFields): array {
     $fieldsByCustomFieldId = array_column($entityFields, NULL, 'custom_field_id');
@@ -60,10 +60,11 @@ final class CustomFieldsHelper {
     $orderedFields = [];
     foreach ($customFields as $customField) {
       $fieldsByCustomFieldId[$customField['id']]['required'] = $customField['is_required'];
-      $orderedFields[] = $fieldsByCustomFieldId[$customField['id']];
+      /** @phpstan-var fieldT $field */
+      $field = $fieldsByCustomFieldId[$customField['id']];
+      $orderedFields[$field['name']] = $field;
     }
 
-    // @phpstan-ignore return.type
     return $orderedFields;
   }
 

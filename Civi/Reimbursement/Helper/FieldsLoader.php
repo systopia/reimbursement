@@ -43,7 +43,28 @@ final class FieldsLoader {
   /**
    * @param array<string, scalar|null> $values
    *
-   * @phpstan-return list<fieldT>
+   * @phpstan-return fieldT
+   *
+   * @throws \CRM_Core_Exception
+   * @throws \InvalidArgumentException If no such field exists.
+   */
+  public function getField(
+    string $entityName,
+    string $fieldName,
+    array $values = [],
+  ): array {
+    $field = $this->getFields($entityName, $values, Comparison::new('name', '=', $fieldName))[$fieldName] ?? NULL;
+    if (NULL === $field) {
+      throw new \InvalidArgumentException("Field not found: $entityName.$fieldName");
+    }
+
+    return $field;
+  }
+
+  /**
+   * @param array<string, scalar|null> $values
+   *
+   * @phpstan-return array<string, fieldT>
    *
    * @throws \CRM_Core_Exception
    */
@@ -57,13 +78,14 @@ final class FieldsLoader {
       'loadOptions' => TRUE,
       'values' => $values,
       'where' => self::toWhere($condition),
-    ])->getArrayCopy();
+    ])->indexBy('name')
+      ->getArrayCopy();
   }
 
   /**
    * @param array<string, scalar|null> $values
    *
-   * @phpstan-return list<fieldT>
+   * @phpstan-return array<string, fieldT>
    *
    * @throws \CRM_Core_Exception
    */
@@ -85,7 +107,7 @@ final class FieldsLoader {
   /**
    * @param array<string, scalar|null> $values
    *
-   * @phpstan-return list<fieldT>
+   * @phpstan-return array<string, fieldT>
    *   Fields ordered by weight.
    *
    * @throws \CRM_Core_Exception

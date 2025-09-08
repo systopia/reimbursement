@@ -22,13 +22,17 @@ namespace Civi\Reimbursement;
 
 use Civi\RemoteTools\Api4\Api4Interface;
 use Civi\RemoteTools\Api4\Query\Comparison;
+use Civi\RemoteTools\Helper\AttachmentsLoaderInterface;
 
 final class ExpenseLoader {
 
   private Api4Interface $api4;
 
-  public function __construct(Api4Interface $api4) {
+  private AttachmentsLoaderInterface $attachmentsLoader;
+
+  public function __construct(Api4Interface $api4, AttachmentsLoaderInterface $attachmentsLoader) {
     $this->api4 = $api4;
+    $this->attachmentsLoader = $attachmentsLoader;
   }
 
   /**
@@ -43,7 +47,7 @@ final class ExpenseLoader {
       'where' => [['case_id', '=', $caseId]],
     ])->getArrayCopy();
 
-    foreach ($expenses as $id => &$expense) {
+    foreach ($expenses as $index => &$expense) {
       /** @var int $expenseId */
       $expenseId = $expense['id'];
       $expenseLine = $this->api4->getEntities(
@@ -53,15 +57,15 @@ final class ExpenseLoader {
 
       if (NULL === $expenseLine) {
         // Do not return expenses without expense line.
-        unset($expenses[$id]);
-        $expenses = array_values($expenses);
+        unset($expenses[$index]);
       }
       else {
         $expense['amount'] = $expenseLine['amount'];
+        $expense['attachments'] = $this->attachmentsLoader->getAttachments('Expense', $expenseId);
       }
     }
 
-    return $expenses;
+    return array_values($expenses);
   }
 
 }

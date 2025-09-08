@@ -23,15 +23,14 @@ namespace Civi\Reimbursement\Form;
 use Civi\Core\SettingsBag;
 use Civi\Reimbursement\Helper\ExpenseTypeLoader;
 use Civi\Reimbursement\Helper\FieldsLoader;
-use Civi\RemoteTools\Api4\Query\Comparison;
 use Civi\RemoteTools\Form\FormSpec\Button\SubmitButton;
+use Civi\RemoteTools\Form\FormSpec\Field\AttachmentsField;
 use Civi\RemoteTools\Form\FormSpec\Field\CalculateField;
 use Civi\RemoteTools\Form\FormSpec\Field\FieldCollectionField;
 use Civi\RemoteTools\Form\FormSpec\Field\FieldListField;
 use Civi\RemoteTools\Form\FormSpec\Field\IntegerField;
 use Civi\RemoteTools\Form\FormSpec\FormFieldFactoryInterface;
 use Civi\RemoteTools\Form\FormSpec\FormSpec;
-
 use CRM_Reimbursement_ExtensionUtil as E;
 
 final class ReimbursementFormSpecFactory {
@@ -79,6 +78,7 @@ final class ReimbursementFormSpecFactory {
 
     $formSpec = new FormSpec(E::ts('Reimbursement'));
 
+    $amountField = $this->fieldsLoader->getField('ExpenseLine', 'amount');
     $totalFieldNames = [];
     foreach ($this->expenseTypeLoader->getExpenseTypes() as $typeId => [$typeName, $typeLabel]) {
       $fieldCollectionField = new FieldCollectionField('', '');
@@ -86,10 +86,8 @@ final class ReimbursementFormSpecFactory {
       $fieldCollectionField->addField((new IntegerField('id', 'ID'))
         ->setHidden(TRUE));
 
-      $amountField = $this->fieldsLoader->getFields('ExpenseLine', [], Comparison::new('name', '=', 'amount'))[0];
-      $fieldCollectionField->addField(
-        $this->formFieldFactory->createFormField($amountField, NULL)
-      );
+      $fieldCollectionField->addField($this->formFieldFactory->createFormField($amountField, NULL));
+      $fieldCollectionField->addField(new AttachmentsField('attachments', E::ts('Attachments')));
 
       $fields = $this->fieldsLoader->getPublicCustomFields('Expense', ['type_id' => $typeId]);
       foreach ($fields as $field) {

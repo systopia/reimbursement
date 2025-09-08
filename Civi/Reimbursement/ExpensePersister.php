@@ -23,15 +23,26 @@ namespace Civi\Reimbursement;
 use Civi\RemoteTools\Api4\Api4Interface;
 use Civi\RemoteTools\Api4\Query\Comparison;
 use Civi\RemoteTools\Api4\Query\CompositeCondition;
+use Civi\RemoteTools\Helper\AttachmentsPersisterInterface;
 
+/**
+ * @phpstan-import-type attachmentT from AttachmentsPersisterInterface
+ */
 final class ExpensePersister {
 
   private Api4Interface $api4;
 
+  private AttachmentsPersisterInterface $attachmentsPersister;
+
   private ExpenseLoader $expenseLoader;
 
-  public function __construct(Api4Interface $api4, ExpenseLoader $expenseLoader) {
+  public function __construct(
+    Api4Interface $api4,
+    AttachmentsPersisterInterface $attachmentsPersister,
+    ExpenseLoader $expenseLoader
+  ) {
     $this->api4 = $api4;
+    $this->attachmentsPersister = $attachmentsPersister;
     $this->expenseLoader = $expenseLoader;
   }
 
@@ -40,7 +51,7 @@ final class ExpensePersister {
    *
    * @throws \CRM_Core_Exception
    */
-  public function persistExpenses(array $expenses, int $caseId): void {
+  public function persistExpenses(array $expenses, int $caseId, ?int $contactId): void {
     /** @var array<int, array<string, mixed>> $currentExpensesById */
     $currentExpensesById = array_column($this->expenseLoader->getExpensesByCaseId($caseId), NULL, 'id');
 
@@ -54,6 +65,10 @@ final class ExpensePersister {
       assert(is_float($amount) || is_int($amount));
       unset($expense['amount']);
 
+      $attachments = $expense['attachments'];
+      assert(is_array($attachments));
+      unset($expense['attachments']);
+
       $expense['case_id'] = $caseId;
       if (isset($expense['id'])) {
         $expenseId = $expense['id'];
@@ -66,6 +81,8 @@ final class ExpensePersister {
       }
 
       $this->persistExpenseLine($amount, $expenseId);
+      // @phpstan-ignore argument.type
+      $this->persistAttachments($attachments, $expenseId, $contactId);
 
       $expenseIds[] = $expenseId;
     }
@@ -107,6 +124,13 @@ final class ExpensePersister {
         'amount' => $amount,
       ]);
     }
+  }
+
+  /**
+   * @param list<attachmentT> $attachments
+   */
+  private function persistAttachments(array $attachments, int $expenseId, ?int $contactId): void {
+    $this->attachmentsPersister->persistAttachmentsFromForm('Expense', $expenseId, $attachments, $contactId);
   }
 
 }

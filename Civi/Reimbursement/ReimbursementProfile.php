@@ -132,7 +132,7 @@ final class ReimbursementProfile extends AbstractRemoteEntityProfile {
     ?int $contactId
   ): void {
     // @phpstan-ignore argument.type
-    $this->expensePersister->persistExpenses($this->expenses, $entityValues['id']);
+    $this->expensePersister->persistExpenses($this->expenses, $entityValues['id'], $contactId);
   }
 
   public function onPreUpdate(
@@ -155,7 +155,7 @@ final class ReimbursementProfile extends AbstractRemoteEntityProfile {
     ?int $contactId
   ): void {
     // @phpstan-ignore argument.type
-    $this->expensePersister->persistExpenses($this->expenses, $newValues['id']);
+    $this->expensePersister->persistExpenses($this->expenses, $newValues['id'], $contactId);
   }
 
   /**
