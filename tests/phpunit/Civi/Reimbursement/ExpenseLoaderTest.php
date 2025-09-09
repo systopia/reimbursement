@@ -26,6 +26,8 @@ use Civi\Reimbursement\Fixtures\ExpenseFixture;
 use Civi\Reimbursement\Fixtures\ExpenseLineFixture;
 use Civi\Reimbursement\Fixtures\ExpenseTypeFixture;
 use Civi\RemoteTools\Api4\Api4;
+use Civi\RemoteTools\Helper\AttachmentsLoaderInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
  * @covers \Civi\Reimbursement\ExpenseLoader
@@ -34,6 +36,8 @@ use Civi\RemoteTools\Api4\Api4;
  */
 final class ExpenseLoaderTest extends AbstractReimbursementHeadlessTestCase {
 
+  private AttachmentsLoaderInterface&MockObject $attachmentsLoaderMock;
+
   /**
    * @var \Civi\Reimbursement\ExpenseLoader
    */
@@ -41,7 +45,8 @@ final class ExpenseLoaderTest extends AbstractReimbursementHeadlessTestCase {
 
   protected function setUp(): void {
     parent::setUp();
-    $this->expenseLoader = new ExpenseLoader(new Api4());
+    $this->attachmentsLoaderMock = $this->createMock(AttachmentsLoaderInterface::class);
+    $this->expenseLoader = new ExpenseLoader(new Api4(), $this->attachmentsLoaderMock);
   }
 
   public function testGetExpensesByCaseId(): void {
@@ -53,6 +58,11 @@ final class ExpenseLoaderTest extends AbstractReimbursementHeadlessTestCase {
     // Expense without expense line isn't returned.
     static::assertSame([], $this->expenseLoader->getExpensesByCaseId($case['id']));
 
+    $attachments = [['id' => 123]];
+    $this->attachmentsLoaderMock->method('getAttachments')
+      ->with('Expense', $expense['id'])
+      ->willReturn($attachments);
+
     ExpenseLineFixture::addFixture($expense['id'], 1.23);
     $expenses = $this->expenseLoader->getExpensesByCaseId($case['id']);
     static::assertCount(1, $expenses);
@@ -63,6 +73,7 @@ final class ExpenseLoaderTest extends AbstractReimbursementHeadlessTestCase {
     static::assertSame(999, $expenses[0]['type_id']);
     static::assertSame('2025-08-14', $expenses[0]['date']);
     static::assertSame(1.23, $expenses[0]['amount']);
+    static::assertSame($attachments, $expenses[0]['attachments']);
 
     // If there's more than one expense line only the first one is returned.
     ExpenseLineFixture::addFixture($expense['id'], 4.56);

@@ -94,6 +94,9 @@ final class ExpensePersister {
     }
   }
 
+  /**
+   * @throws \CRM_Core_Exception
+   */
   private function persistExpenseLine(int|float $amount, int $expenseId): void {
     /** @var list<array<string, mixed>> $currentExpenseLines */
     $currentExpenseLines = $this->api4->getEntities(
@@ -128,6 +131,8 @@ final class ExpensePersister {
 
   /**
    * @param list<attachmentT> $attachments
+   *
+   * @throws \CRM_Core_Exception
    */
   private function persistAttachments(array $attachments, int $expenseId, ?int $contactId): void {
     $this->attachmentsPersister->persistAttachmentsFromForm('Expense', $expenseId, $attachments, $contactId);

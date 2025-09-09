@@ -28,6 +28,8 @@ use Civi\Reimbursement\Fixtures\ExpenseFixture;
 use Civi\Reimbursement\Fixtures\ExpenseLineFixture;
 use Civi\Reimbursement\Fixtures\ExpenseTypeFixture;
 use Civi\RemoteTools\Api4\Api4;
+use Civi\RemoteTools\Helper\AttachmentsLoaderInterface;
+use Civi\RemoteTools\Helper\AttachmentsPersisterInterface;
 
 /**
  * @covers \Civi\Reimbursement\ExpensePersister
@@ -36,11 +38,19 @@ use Civi\RemoteTools\Api4\Api4;
  */
 final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
 
+  private AttachmentsPersisterInterface&\PHPUnit\Framework\MockObject\MockObject $attachmentsPersisterMock;
+
   private ExpensePersister $expensePersister;
 
   protected function setUp(): void {
     parent::setUp();
-    $this->expensePersister = new ExpensePersister(Api4::getInstance(), new ExpenseLoader(Api4::getInstance()));
+    $attachmentsLoaderMock = $this->createMock(AttachmentsLoaderInterface::class);
+    $this->attachmentsPersisterMock = $this->createMock(AttachmentsPersisterInterface::class);
+    $this->expensePersister = new ExpensePersister(
+      Api4::getInstance(),
+      $this->attachmentsPersisterMock,
+      new ExpenseLoader(Api4::getInstance(), $attachmentsLoaderMock)
+    );
   }
 
   public function testNew(): void {
@@ -55,9 +65,23 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       'status_id:name' => 'Pending',
       'date' => '2025-08-14',
       'amount' => 1.23,
+      'attachments' => [['test_attachment']],
     ];
 
-    $this->expensePersister->persistExpenses([$expenseData], $case['id']);
+    $expenseId = NULL;
+    $this->attachmentsPersisterMock->expects(static::once())->method('persistAttachmentsFromForm')
+      ->willReturnCallback(function (
+        string $entityName,
+        int $entityId,
+        array $attachments,
+        ?int $contactId
+      ) use (&$expenseId, $contact): void {
+        static::assertSame('Expense', $entityName);
+        $expenseId = $entityId;
+        static::assertSame([['test_attachment']], $attachments);
+        static::assertSame($contact['id'], $contactId);
+      });
+    $this->expensePersister->persistExpenses([$expenseData], $case['id'], $contact['id']);
 
     $persistedExpense = Expense::get(FALSE)->setSelect(['*', 'status_id:name'])->execute()->single();
     static::assertSame($case['id'], $persistedExpense['case_id']);
@@ -66,6 +90,7 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
     static::assertSame(999, $persistedExpense['type_id']);
     static::assertSame('2025-08-14', $persistedExpense['date']);
     static::assertSame('Pending', $persistedExpense['status_id:name']);
+    static::assertSame($expenseId, $persistedExpense['id']);
 
     $persistedExpenseLine = ExpenseLine::get(FALSE)
       ->addWhere('expense_id', '=', $persistedExpense['id'])
@@ -87,6 +112,7 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
     ]);
     ExpenseLineFixture::addFixture($expense['id'], 1.23);
 
+    $attachments = [['test_attachment']];
     $expenseData = [
       'id' => $expense['id'],
       'contact_id' => $contact2['id'],
@@ -94,9 +120,12 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       'type_id' => 999,
       'status_id:name' => 'Pending',
       'amount' => 456,
+      'attachments' => $attachments,
     ];
 
-    $this->expensePersister->persistExpenses([$expenseData], $case['id']);
+    $this->attachmentsPersisterMock->expects(static::once())->method('persistAttachmentsFromForm')
+      ->with('Expense', $expense['id'], $attachments, $contact2['id']);
+    $this->expensePersister->persistExpenses([$expenseData], $case['id'], $contact2['id']);
 
     $persistedExpense = Expense::get(FALSE)->setSelect(['*', 'status_id:name'])->execute()->single();
     static::assertSame($expense['id'], $persistedExpense['id']);
@@ -127,15 +156,30 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       'type_id' => 999,
       'status_id:name' => 'Pending',
       'amount' => 4.56,
+      'attachments' => [['test_attachment']],
     ];
 
-    $this->expensePersister->persistExpenses([$expenseData], $case['id']);
+    $expenseId = NULL;
+    $this->attachmentsPersisterMock->expects(static::once())->method('persistAttachmentsFromForm')
+      ->willReturnCallback(function (
+        string $entityName,
+        int $entityId,
+        array $attachments,
+        ?int $contactId
+      ) use (&$expenseId, $contact): void {
+        static::assertSame('Expense', $entityName);
+        $expenseId = $entityId;
+        static::assertSame([['test_attachment']], $attachments);
+        static::assertSame($contact['id'], $contactId);
+      });
+    $this->expensePersister->persistExpenses([$expenseData], $case['id'], $contact['id']);
 
     $persistedExpense = Expense::get(FALSE)->setSelect(['*', 'status_id:name'])->execute()->single();
     static::assertNotSame($expense['id'], $persistedExpense['id']);
     static::assertSame($case['id'], $persistedExpense['case_id']);
     static::assertSame(999, $persistedExpense['type_id']);
     static::assertSame('Pending', $persistedExpense['status_id:name']);
+    static::assertSame($expenseId, $persistedExpense['id']);
 
     $persistedExpenseLine = ExpenseLine::get(FALSE)
       ->addWhere('expense_id', '=', $persistedExpense['id'])
@@ -160,9 +204,12 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       'type_id' => 999,
       'status_id:name' => 'Pending',
       'amount' => 456,
+      'attachments' => [],
     ];
 
-    $this->expensePersister->persistExpenses([$expenseData], $case['id']);
+    $this->attachmentsPersisterMock->expects(static::once())->method('persistAttachmentsFromForm')
+      ->with('Expense', $expense['id'], [], $contact['id']);
+    $this->expensePersister->persistExpenses([$expenseData], $case['id'], $contact['id']);
 
     $persistedExpense = Expense::get(FALSE)->setSelect(['*', 'status_id:name'])->execute()->single();
     static::assertSame($expense['id'], $persistedExpense['id']);
