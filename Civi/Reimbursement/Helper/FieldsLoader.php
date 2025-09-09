@@ -73,6 +73,14 @@ final class FieldsLoader {
     array $values = [],
     ?ConditionInterface $condition = NULL,
   ): array {
+    if (isset($values['case_type_id.name'])) {
+      // case_type_id.name in values doesn't work.
+      $values['case_type_id'] = $this->api4->execute('CaseType', 'get', [
+        'select' => ['id'],
+        'where' => [['name', '=', $values['case_type_id.name']]],
+      ])->single()['id'];
+    }
+
     // @phpstan-ignore return.type
     return $this->api4->execute($entityName, 'getFields', [
       'loadOptions' => TRUE,
