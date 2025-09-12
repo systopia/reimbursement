@@ -20,6 +20,7 @@ declare(strict_types = 1);
 
 namespace Civi\Reimbursement\Form;
 
+use Civi\Reimbursement\CaseTypeConfigData;
 use Civi\RemoteTools\Api4\Api4Interface;
 use Civi\RemoteTools\Form\FormSpec\DataTransformerInterface;
 use CRM_Reimbursement_ExtensionUtil as E;
@@ -28,31 +29,41 @@ final class ReimbursementCreateDataTransformer implements DataTransformerInterfa
 
   private Api4Interface $api4;
 
-  public function __construct(Api4Interface $api4) {
+  private CaseTypeConfigData $caseTypeConfig;
+
+  public function __construct(Api4Interface $api4, CaseTypeConfigData $caseTypeConfig) {
     $this->api4 = $api4;
+    $this->caseTypeConfig = $caseTypeConfig;
   }
 
   /**
    * @throws \CRM_Core_Exception
    */
   public function toEntityValues(array $formData, ?array $currentEntityValues, ?int $contactId): array {
-    $formData['contact_id'] = $contactId;
-    $formData['creator_id'] = $contactId;
+    $entityValues = [
+      'case_type_id' => $this->caseTypeConfig->getCaseTypeId(),
+      'status_id' => $this->caseTypeConfig->getInitialCaseStatusId(),
+      'contact_id' => $contactId,
+      'creator_id' => $contactId,
+    ] + $formData;
 
-    if (!isset($formData['title'])) {
+    if (!isset($entityValues['title'])) {
       // title has to be unique.
       $date = \CRM_Utils_Date::customFormat(\CRM_Utils_Time::date('Y-m-d H:i:s'));
       if (NULL === $contactId) {
-        $formData['title'] = E::ts('Reimbursement request on %1', [1 => $date]) . ' (' . uniqid() . ')';
+        $entityValues['title'] = E::ts('Reimbursement request on %1', [1 => $date]) . ' (' . uniqid() . ')';
       }
       else {
         $contact = $this->api4->getEntity('Contact', $contactId);
         assert(NULL !== $contact);
-        $formData['title'] = E::ts('Reimbursement request by %1 on %2', [1 => $contact['display_name'], 2 => $date]);
+        $entityValues['title'] = E::ts(
+          'Reimbursement request by %1 on %2',
+          [1 => $contact['display_name'], 2 => $date]
+        );
       }
     }
 
-    return $formData;
+    return $entityValues;
   }
 
 }

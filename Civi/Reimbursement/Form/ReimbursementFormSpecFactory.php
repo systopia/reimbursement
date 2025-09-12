@@ -21,6 +21,7 @@ declare(strict_types = 1);
 namespace Civi\Reimbursement\Form;
 
 use Civi\Core\SettingsBag;
+use Civi\Reimbursement\CaseTypeConfigData;
 use Civi\Reimbursement\Helper\ExpenseTypeLoader;
 use Civi\Reimbursement\Helper\FieldsLoader;
 use Civi\RemoteTools\Form\FormSpec\Button\SubmitButton;
@@ -33,6 +34,9 @@ use Civi\RemoteTools\Form\FormSpec\FormFieldFactoryInterface;
 use Civi\RemoteTools\Form\FormSpec\FormSpec;
 use CRM_Reimbursement_ExtensionUtil as E;
 
+/**
+ * @phpstan-import-type fieldT from FormFieldFactoryInterface
+ */
 final class ReimbursementFormSpecFactory {
 
   private FieldsLoader $fieldsLoader;
@@ -41,9 +45,9 @@ final class ReimbursementFormSpecFactory {
 
   private FormFieldFactoryInterface $formFieldFactory;
 
-  private ReimbursementCreateDataTransformer $createDataTransformer;
+  private ReimbursementCreateDataTransformerFactory $createDataTransformerFactory;
 
-  private ReimbursementDataTransformer $dataTransformer;
+  private ReimbursementDataTransformerFactory $dataTransformerFactory;
 
   private SettingsBag $settings;
 
@@ -51,15 +55,15 @@ final class ReimbursementFormSpecFactory {
     FieldsLoader $fieldsLoader,
     ExpenseTypeLoader $expenseTypeLoader,
     FormFieldFactoryInterface $formFieldFactory,
-    ReimbursementCreateDataTransformer $createDataTransformer,
-    ReimbursementDataTransformer $dataTransformer,
+    ReimbursementCreateDataTransformerFactory $createDataTransformerFactory,
+    ReimbursementDataTransformerFactory $dataTransformerFactory,
     ?SettingsBag $settings = NULL,
   ) {
     $this->fieldsLoader = $fieldsLoader;
     $this->expenseTypeLoader = $expenseTypeLoader;
     $this->formFieldFactory = $formFieldFactory;
-    $this->createDataTransformer = $createDataTransformer;
-    $this->dataTransformer = $dataTransformer;
+    $this->createDataTransformerFactory = $createDataTransformerFactory;
+    $this->dataTransformerFactory = $dataTransformerFactory;
     $this->settings = $settings ?? \Civi::settings();
   }
 
@@ -67,8 +71,14 @@ final class ReimbursementFormSpecFactory {
    * @param array<string, mixed>|null $entityValues
    *
    * @throws \CRM_Core_Exception
+   *
+   * phpcs:disable Generic.Metrics.CyclomaticComplexity.TooHigh
    */
-  public function createFormSpec(string $caseTypeName, ?array $entityValues): FormSpec {
+  public function createFormSpec(CaseTypeConfigData $config, ?array $entityValues): FormSpec {
+  // phpcs:enable
+    $readOnly = isset($entityValues['id'])
+      && !in_array($entityValues['status_id'], $config->getWritableCaseStatusIds(), TRUE);
+
     $expensesByTypeId = [];
     /** @var array<string, mixed> $expense */
     // @phpstan-ignore foreach.nonIterable
@@ -80,25 +90,11 @@ final class ReimbursementFormSpecFactory {
 
     $amountField = $this->fieldsLoader->getField('ExpenseLine', 'amount');
     $totalFieldNames = [];
-    foreach ($this->expenseTypeLoader->getExpenseTypes() as $typeId => [$typeName, $typeLabel]) {
-      $fieldCollectionField = new FieldCollectionField('', '');
-
-      $fieldCollectionField->addField((new IntegerField('id', 'ID'))
-        ->setHidden(TRUE));
-
-      $fieldCollectionField->addField($this->formFieldFactory->createFormField($amountField, NULL));
-      $fieldCollectionField->addField(new AttachmentsField('attachments', E::ts('Attachments')));
-
-      $fields = $this->fieldsLoader->getPublicCustomFields('Expense', ['type_id' => $typeId]);
-      foreach ($fields as $field) {
-        $fieldCollectionField->addField($this->formFieldFactory->createFormField($field, NULL));
-      }
-
-      $formSpec->addElement((new FieldListField("expenses_$typeId", $typeLabel, $fieldCollectionField))
-        ->setItemLayout(FieldListField::LAYOUT_VERTICAL)
-        ->setAddButtonLabel(E::ts('Add %1', [1 => $typeLabel]))
-        ->setRemoveButtonLabel(E::ts('Remove %1', [1 => $typeLabel]))
+    $expenseTypes = $this->expenseTypeLoader->getExpenseTypes($config->getExpenseTypeIds());
+    foreach ($expenseTypes as $typeId => [$typeName, $typeLabel]) {
+      $formSpec->addElement($this->createExpenseTypeField($typeId, $typeLabel, $amountField)
         ->setDefaultValue($expensesByTypeId[$typeId] ?? [])
+        ->setReadOnly($readOnly)
       );
 
       $totalFieldName = "_expenses_{$typeId}_total";
@@ -111,9 +107,11 @@ final class ReimbursementFormSpecFactory {
       );
     }
 
-    $caseFields = $this->fieldsLoader->getPublicCustomFields('Case', ['case_type_id.name' => $caseTypeName]);
+    $caseFields = $this->fieldsLoader->getPublicCustomFields('Case', ['case_type_id' => $config->getCaseTypeId()]);
     foreach ($caseFields as $caseField) {
-      $formSpec->addElement($this->formFieldFactory->createFormField($caseField, $entityValues));
+      $formSpec->addElement(
+        $this->formFieldFactory->createFormField($caseField, $entityValues)->setReadOnly($readOnly)
+      );
     }
 
     $formSpec->addElement(
@@ -124,14 +122,46 @@ final class ReimbursementFormSpecFactory {
       )->setDefaultValue(0)
     );
 
-    $formSpec->addElement(new SubmitButton('_action', 'submit', E::ts('Submit')));
+    if (!$readOnly) {
+      $formSpec->addElement(new SubmitButton('_action', 'save', $config->getSaveButtonLabel() ?? E::ts('Save')));
+      if (NULL !== $config->getSubmitCaseStatusId()) {
+        $formSpec->addElement(
+          new SubmitButton('_action', 'submit', $config->getSubmitButtonLabel() ?? E::ts('Submit'))
+        );
+      }
+    }
 
     if (!isset($entityValues['id'])) {
-      $formSpec->appendDataTransformer($this->createDataTransformer);
+      $formSpec->appendDataTransformer($this->createDataTransformerFactory->createTransformer($config));
     }
-    $formSpec->appendDataTransformer($this->dataTransformer);
+    $formSpec->appendDataTransformer($this->dataTransformerFactory->createTransformer($config));
 
     return $formSpec;
+  }
+
+  /**
+   * @phpstan-param fieldT $amountField
+   *
+   * @throws \CRM_Core_Exception
+   */
+  private function createExpenseTypeField(int $typeId, string $typeLabel, array $amountField): FieldListField {
+    $fieldCollectionField = (new FieldCollectionField('', ''));
+
+    $fieldCollectionField->addField((new IntegerField('id', 'ID'))
+      ->setHidden(TRUE));
+
+    $fieldCollectionField->addField($this->formFieldFactory->createFormField($amountField, NULL));
+    $fieldCollectionField->addField(new AttachmentsField('attachments', E::ts('Attachments')));
+
+    $fields = $this->fieldsLoader->getPublicCustomFields('Expense', ['type_id' => $typeId]);
+    foreach ($fields as $field) {
+      $fieldCollectionField->addField($this->formFieldFactory->createFormField($field, NULL));
+    }
+
+    return (new FieldListField("expenses_$typeId", $typeLabel, $fieldCollectionField))
+      ->setItemLayout(FieldListField::LAYOUT_VERTICAL)
+      ->setAddButtonLabel(E::ts('Add %1', [1 => $typeLabel]))
+      ->setRemoveButtonLabel(E::ts('Remove %1', [1 => $typeLabel]));
   }
 
 }

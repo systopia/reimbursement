@@ -4,6 +4,7 @@
     <description>CiviCRM coding standard with some additional changes</description>
 
     <file>Civi</file>
+    <file>CRM</file>
     <file>tests</file>
     <file>reimbursement.php</file>
 

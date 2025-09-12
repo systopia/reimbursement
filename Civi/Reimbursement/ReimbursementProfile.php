@@ -19,13 +19,16 @@ declare(strict_types = 1);
 
 namespace Civi\Reimbursement;
 
+use Civi\API\Exception\UnauthorizedException;
 use Civi\Reimbursement\Form\ReimbursementFormSpecFactory;
+use Civi\Reimbursement\Form\SelectCaseTypeFormSpecFactory;
 use Civi\RemoteTools\Api4\Query\CompositeCondition;
 use Civi\RemoteTools\Api4\Query\ConditionInterface;
 use Civi\RemoteTools\Api4\Query\Join;
 use Civi\RemoteTools\EntityProfile\AbstractRemoteEntityProfile;
 use Civi\RemoteTools\EntityProfile\Authorization\GrantResult;
 use Civi\RemoteTools\Form\FormSpec\FormSpec;
+use CRM_Reimbursement_ExtensionUtil as E;
 
 final class ReimbursementProfile extends AbstractRemoteEntityProfile {
 
@@ -34,6 +37,8 @@ final class ReimbursementProfile extends AbstractRemoteEntityProfile {
   public const ENTITY_NAME = 'Case';
 
   public const REMOTE_ENTITY_NAME = 'RemoteCase';
+
+  private CaseTypeConfigManager $caseTypeConfigManager;
 
   private ExpenseLoader $expenseLoader;
 
@@ -46,14 +51,20 @@ final class ReimbursementProfile extends AbstractRemoteEntityProfile {
 
   private ReimbursementFormSpecFactory $formSpecFactory;
 
+  private SelectCaseTypeFormSpecFactory $selectCaseTypeFormSpecFactory;
+
   public function __construct(
+    CaseTypeConfigManager $caseTypeConfigManager,
     ExpenseLoader $expenseLoader,
     ExpensePersister $expensePersister,
-    ReimbursementFormSpecFactory $formSpecFactory
+    ReimbursementFormSpecFactory $formSpecFactory,
+    SelectCaseTypeFormSpecFactory $selectCaseTypeFormSpecFactory
   ) {
+    $this->caseTypeConfigManager = $caseTypeConfigManager;
     $this->expenseLoader = $expenseLoader;
     $this->expensePersister = $expensePersister;
     $this->formSpecFactory = $formSpecFactory;
+    $this->selectCaseTypeFormSpecFactory = $selectCaseTypeFormSpecFactory;
   }
 
   public function getEntityName(): string {
@@ -86,26 +97,63 @@ final class ReimbursementProfile extends AbstractRemoteEntityProfile {
       return GrantResult::newDenied();
     }
 
-    return GrantResult::newPermitted();
+    if (!isset($arguments['type'])) {
+      return [] === $this->caseTypeConfigManager->getForNewCases()
+        ? GrantResult::newDenied() : GrantResult::newPermitted();
+    }
+
+    $caseTypeConfig = is_string($arguments['type'])
+      ? $this->caseTypeConfigManager->getByCaseTypeName($arguments['type']) : NULL;
+
+    return NULL === $caseTypeConfig?->getInitialCaseStatusId() ? GrantResult::newDenied() : GrantResult::newPermitted();
+  }
+
+  public function isUpdateGranted(?array $entityValues, ?int $contactId): GrantResult {
+    if (NULL === $entityValues) {
+      return GrantResult::newDenied();
+    }
+
+    // @phpstan-ignore argument.type
+    $caseTypeConfig = $this->caseTypeConfigManager->getByCaseTypeId($entityValues['case_type_id']);
+
+    return NULL === $caseTypeConfig ? GrantResult::newDenied() : GrantResult::newPermitted();
   }
 
   public function getSelectFieldNames(array $select, string $actionName, array $remoteSelect, ?int $contactId): array {
-    $select[] = 'case_type_id:name';
+    $select[] = 'case_type_id';
     $select[] = 'custom.*';
 
     return $select;
   }
 
   public function getCreateFormSpec(array $arguments, array $entityFields, ?int $contactId): FormSpec {
-    return $this->formSpecFactory->createFormSpec($this->getCaseTypeName($arguments, $contactId), NULL);
+    if (!isset($arguments['type'])) {
+      $configs = $this->caseTypeConfigManager->getForNewCases();
+      if (count($configs) === 1) {
+        return $this->formSpecFactory->createFormSpec($configs[0], NULL);
+      }
+
+      return $this->selectCaseTypeFormSpecFactory->createFormSpec($configs);
+    }
+
+    assert(is_string($arguments['type']));
+    $caseTypeConfig = $this->caseTypeConfigManager->getByCaseTypeName($arguments['type']);
+    assert(NULL !== $caseTypeConfig);
+
+    return $this->formSpecFactory->createFormSpec($caseTypeConfig, NULL);
   }
 
   public function getUpdateFormSpec(array $entityValues, array $entityFields, ?int $contactId): FormSpec {
     // @phpstan-ignore argument.type
-    $entityValues['expenses'] = $this->expenseLoader->getExpensesByCaseId($entityValues['id']);
+    $caseTypeConfig = $this->caseTypeConfigManager->getByCaseTypeId($entityValues['case_type_id']);
+    if (NULL === $caseTypeConfig) {
+      throw new UnauthorizedException(E::ts('Case type is not configured for reimbursement.'));
+    }
 
     // @phpstan-ignore argument.type
-    return $this->formSpecFactory->createFormSpec($entityValues['case_type_id:name'], $entityValues);
+    $entityValues['expenses'] = $this->expenseLoader->getExpensesByCaseId($entityValues['id']);
+
+    return $this->formSpecFactory->createFormSpec($caseTypeConfig, $entityValues);
   }
 
   public function onPreCreate(
@@ -115,7 +163,6 @@ final class ReimbursementProfile extends AbstractRemoteEntityProfile {
     FormSpec $formSpec,
     ?int $contactId
   ): void {
-    $entityValues['case_type_id:name'] = $this->getCaseTypeName($arguments, $contactId);
     // @phpstan-ignore assign.propertyType
     $this->expenses = $entityValues['expenses'];
     unset($entityValues['expenses']);
@@ -156,13 +203,6 @@ final class ReimbursementProfile extends AbstractRemoteEntityProfile {
   ): void {
     // @phpstan-ignore argument.type
     $this->expensePersister->persistExpenses($this->expenses, $newValues['id'], $contactId);
-  }
-
-  /**
-   * @param array<int|string, mixed> $arguments
-   */
-  private function getCaseTypeName(array $arguments, ?int $contactId): string {
-    return 'reimbursement';
   }
 
 }

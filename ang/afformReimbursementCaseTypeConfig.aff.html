@@ -1,0 +1,22 @@
+<af-form ctrl="afform">
+  <af-entity type="ReimbursementCaseTypeConfig" name="ReimbursementCaseTypeConfig1" label="ReimbursementCaseTypeConfig" actions="{create: true, update: true}" security="RBAC" url-autofill="1" />
+  <fieldset af-fieldset="ReimbursementCaseTypeConfig1" class="af-container" af-title="ReimbursementCaseTypeConfig">
+    <div class="af-container">
+      <af-field name="case_type_id" />
+      <fieldset class="af-container af-layout-cols af-container-style-pane">
+        <af-field name="initial_case_status_id" />
+        <af-field name="submit_case_status_id" />
+        <af-field name="writable_case_status_ids" />
+      </fieldset>
+      <fieldset class="af-container af-layout-cols af-container-style-pane">
+        <af-field name="expense_type_ids" />
+        <af-field name="expense_status_id" />
+      </fieldset>
+      <fieldset class="af-container af-layout-cols af-container-style-pane">
+        <af-field name="save_button_label" />
+        <af-field name="submit_button_label" af-if="([[&amp;quot;ReimbursementCaseTypeConfig1[0][fields][submit_case_status_id]&amp;quot;,&amp;quot;IS NOT EMPTY&amp;quot;]])" />
+      </fieldset>
+    </div>
+  </fieldset>
+  <button class="af-button btn btn-primary" crm-icon="fa-check" ng-click="afform.submit()" ng-if="afform.showSubmitButton">ts('Submit')</button>
+</af-form>

@@ -20,14 +20,25 @@ declare(strict_types = 1);
 
 namespace Civi\Reimbursement\Form;
 
+use Civi\Reimbursement\CaseTypeConfigData;
 use Civi\RemoteTools\Form\FormSpec\DataTransformerInterface;
 
 final class ReimbursementDataTransformer implements DataTransformerInterface {
+
+  private CaseTypeConfigData $caseTypeConfig;
+
+  public function __construct(CaseTypeConfigData $caseTypeConfig) {
+    $this->caseTypeConfig = $caseTypeConfig;
+  }
 
   public function toEntityValues(array $formData, ?array $currentEntityValues, ?int $contactId): array {
     $today = \CRM_Utils_Time::date('Y-m-d');
 
     $entityValues = ['expenses' => []];
+    if ('submit' === $formData['_action']) {
+      $entityValues['status_id'] = $this->caseTypeConfig->getSubmitCaseStatusId();
+    }
+
     foreach ($formData as $fieldName => $value) {
       if (str_starts_with($fieldName, 'expenses_')) {
         assert(is_array($value));
@@ -35,7 +46,7 @@ final class ReimbursementDataTransformer implements DataTransformerInterface {
         foreach ($value as $expense) {
           assert(is_array($expense));
           $expense['type_id'] = $expenseTypeId;
-          $expense['status_id:name'] = 'Pending';
+          $expense['status_id'] = $this->caseTypeConfig->getExpenseStatusId();
           $expense['contact_id'] = $contactId;
           $expense['source_contact_id'] = $contactId;
           $expense['date'] = $today;

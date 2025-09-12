@@ -31,13 +31,21 @@ final class ExpenseTypeLoader {
   }
 
   /**
+   * @param list<int> $ids
+   *   Optional list of expense type IDs
+   *
    * @return array<int, array{string, string}>
    *   Mapping of type id to tuples of name and label ordered by weight.
    *
    * @throws \CRM_Core_Exception
    */
-  public function getExpenseTypes(): array {
+  public function getExpenseTypes(array $ids = []): array {
     $returnTypes = [];
+
+    $where = [['option_group_id:name', '=', 'expense_type']];
+    if ([] !== $ids) {
+      $where[] = ['value', 'IN', $ids];
+    }
 
     /** @var array<int, array{value: string, name: string, label: string}> $types */
     $types = $this->api4->execute('OptionValue', 'get', [
@@ -46,9 +54,7 @@ final class ExpenseTypeLoader {
         'name',
         'label',
       ],
-      'where' => [
-        ['option_group_id:name', '=', 'expense_type'],
-      ],
+      'where' => $where,
       'orderBy' => [
         'weight' => 'ASC',
       ],

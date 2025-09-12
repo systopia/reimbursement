@@ -1,11 +1,13 @@
 <?php
 declare(strict_types = 1);
 
+use Civi\Reimbursement\CaseTypeConfigManager;
 use Civi\Reimbursement\ExpenseLoader;
 use Civi\Reimbursement\ExpensePersister;
-use Civi\Reimbursement\Form\ReimbursementCreateDataTransformer;
-use Civi\Reimbursement\Form\ReimbursementDataTransformer;
+use Civi\Reimbursement\Form\ReimbursementCreateDataTransformerFactory;
+use Civi\Reimbursement\Form\ReimbursementDataTransformerFactory;
 use Civi\Reimbursement\Form\ReimbursementFormSpecFactory;
+use Civi\Reimbursement\Form\SelectCaseTypeFormSpecFactory;
 use Civi\Reimbursement\Helper\CustomFieldsHelper;
 use Civi\Reimbursement\Helper\ExpenseTypeLoader;
 use Civi\Reimbursement\Helper\FieldsLoader;
@@ -33,13 +35,15 @@ function reimbursement_civicrm_container(ContainerBuilder $container): void {
   $container->autowire(ExpenseTypeLoader::class);
   $container->autowire(FieldsLoader::class);
 
-  $container->autowire(ReimbursementCreateDataTransformer::class);
-  $container->autowire(ReimbursementDataTransformer::class);
+  $container->autowire(ReimbursementCreateDataTransformerFactory::class);
+  $container->autowire(ReimbursementDataTransformerFactory::class);
   $container->autowire(ReimbursementFormSpecFactory::class);
+  $container->autowire(SelectCaseTypeFormSpecFactory::class);
 
   $container->autowire(ExpenseLoader::class);
   $container->autowire(ExpensePersister::class);
 
+  $container->autowire(CaseTypeConfigManager::class);
   $container->autowire(ReimbursementProfile::class)
     ->addTag(ReimbursementProfile::SERVICE_TAG);
 }

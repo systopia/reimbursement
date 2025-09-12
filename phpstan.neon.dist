@@ -1,6 +1,7 @@
 parameters:
 	paths:
 		- Civi
+		- CRM
 		- managed
 		- tests
 		- reimbursement.php
@@ -42,6 +43,6 @@ parameters:
 		# Note paths are prefixed with "*/" to work with inspections in PHPStorm because of:
 		# https://youtrack.jetbrains.com/issue/WI-63891/PHPStan-ignoreErrors-configuration-isnt-working-with-inspections
 		-
-			message: '#expects int, mixed given.$#'
+			message: '#expects int(\|null)?, mixed given.$#'
 			path: */tests/phpunit/**
 	tmpDir: .phpstan
