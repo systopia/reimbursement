@@ -7,7 +7,7 @@ return [
   'icon' => 'fa-list-alt',
   'server_route' => 'civicrm/admin/reimbursement/case-type-config/edit',
   'permission' => [
-    'administer CiviCRM',
+    'administer CiviCase',
   ],
   'create_submission' => TRUE,
 ];

@@ -7,6 +7,6 @@ return [
   'icon' => 'fa-list-alt',
   'server_route' => 'civicrm/admin/reimbursement/case-type-config',
   'permission' => [
-    'administer CiviCRM',
+    'administer CiviCase',
   ],
 ];

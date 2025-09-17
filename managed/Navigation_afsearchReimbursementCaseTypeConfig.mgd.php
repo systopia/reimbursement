@@ -15,10 +15,10 @@ return [
         'url' => 'civicrm/admin/reimbursement/case-type-config',
         'icon' => 'crm-i fa-list-alt',
         'permission' => [
-          'administer CiviCRM',
+          'administer CiviCase',
         ],
         'permission_operator' => 'AND',
-        'parent_id.name' => 'System Settings',
+        'parent_id.name' => 'CiviCase',
       ],
       'match' => ['name', 'domain_id'],
     ],

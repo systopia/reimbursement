@@ -11,4 +11,9 @@ namespace Civi\Api4;
  * @package Civi\Api4
  */
 final class ReimbursementCaseTypeConfig extends Generic\DAOEntity {
+
+  public static function permissions() {
+    return CaseType::permissions();
+  }
+
 }
