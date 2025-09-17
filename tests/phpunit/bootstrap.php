@@ -1,6 +1,7 @@
 <?php
 declare(strict_types = 1);
 
+use Civi\Reimbursement\Form\ReimbursementFormSpecFactory;
 use Composer\Autoload\ClassLoader;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -52,6 +53,8 @@ if (!function_exists('ts')) {
  * Modify DI container for tests.
  */
 function _reimbursement_test_civicrm_container(ContainerBuilder $container): void {
+  $container->setAlias(ReimbursementFormSpecFactory::class . 'Alias', ReimbursementFormSpecFactory::class)
+    ->setPublic(TRUE);
 }
 
 function addExtensionToClassLoader(string $extension): void {

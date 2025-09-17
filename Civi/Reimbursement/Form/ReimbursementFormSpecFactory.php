@@ -89,10 +89,11 @@ final class ReimbursementFormSpecFactory {
     $formSpec = new FormSpec(E::ts('Reimbursement'));
 
     $amountField = $this->fieldsLoader->getField('ExpenseLine', 'amount');
+    $descriptionField = $this->fieldsLoader->getField('ExpenseLine', 'description');
     $totalFieldNames = [];
     $expenseTypes = $this->expenseTypeLoader->getExpenseTypes($config->getExpenseTypeIds());
     foreach ($expenseTypes as $typeId => [$typeName, $typeLabel]) {
-      $formSpec->addElement($this->createExpenseTypeField($typeId, $typeLabel, $amountField)
+      $formSpec->addElement($this->createExpenseTypeField($typeId, $typeLabel, $amountField, $descriptionField)
         ->setDefaultValue($expensesByTypeId[$typeId] ?? [])
         ->setReadOnly($readOnly)
       );
@@ -141,16 +142,28 @@ final class ReimbursementFormSpecFactory {
 
   /**
    * @phpstan-param fieldT $amountField
+   * @phpstan-param fieldT $descriptionField
    *
    * @throws \CRM_Core_Exception
    */
-  private function createExpenseTypeField(int $typeId, string $typeLabel, array $amountField): FieldListField {
+  private function createExpenseTypeField(
+    int $typeId,
+    string $typeLabel,
+    array $amountField,
+    array $descriptionField
+  ): FieldListField {
     $fieldCollectionField = (new FieldCollectionField('', ''));
 
     $fieldCollectionField->addField((new IntegerField('id', 'ID'))
-      ->setHidden(TRUE));
+      ->setHidden(TRUE)
+      ->setReadOnly(TRUE)
+    );
 
-    $fieldCollectionField->addField($this->formFieldFactory->createFormField($amountField, NULL));
+    $fieldCollectionField->addField(
+      // @phpstan-ignore method.notFound
+      $this->formFieldFactory->createFormField($amountField, NULL)->setMinimum(0)
+    );
+    $fieldCollectionField->addField($this->formFieldFactory->createFormField($descriptionField, NULL));
     $fieldCollectionField->addField(new AttachmentsField('attachments', E::ts('Attachments')));
 
     $fields = $this->fieldsLoader->getPublicCustomFields('Expense', ['type_id' => $typeId]);

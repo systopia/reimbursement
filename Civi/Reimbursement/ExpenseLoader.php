@@ -61,6 +61,7 @@ final class ExpenseLoader {
       }
       else {
         $expense['amount'] = $expenseLine['amount'];
+        $expense['description'] = $expenseLine['description'];
         $expense['attachments'] = $this->attachmentsLoader->getAttachments('Expense', $expenseId);
       }
     }

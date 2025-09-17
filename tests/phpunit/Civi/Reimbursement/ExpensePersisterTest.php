@@ -65,6 +65,7 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       'status_id:name' => 'Pending',
       'date' => '2025-08-14',
       'amount' => 1.23,
+      'description' => 'test',
       'attachments' => [['test_attachment']],
     ];
 
@@ -98,6 +99,7 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       ->single();
 
     static::assertSame(1.23, $persistedExpenseLine['amount']);
+    static::assertSame('test', $persistedExpenseLine['description']);
   }
 
   public function testUpdate(): void {
@@ -110,7 +112,7 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       'date' => '2025-08-14',
       'status_id:name' => 'Approved',
     ]);
-    ExpenseLineFixture::addFixture($expense['id'], 1.23);
+    ExpenseLineFixture::addFixture($expense['id'], 1.23, ['description' => 'test']);
 
     $attachments = [['test_attachment']];
     $expenseData = [
@@ -120,6 +122,7 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       'type_id' => 999,
       'status_id:name' => 'Pending',
       'amount' => 456,
+      'description' => NULL,
       'attachments' => $attachments,
     ];
 
@@ -141,6 +144,7 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       ->single();
 
     static::assertSame(456.0, $persistedExpenseLine['amount']);
+    static::assertNull($persistedExpenseLine['description']);
   }
 
   public function testPreviousExpenseRemoved(): void {
@@ -156,6 +160,7 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       'type_id' => 999,
       'status_id:name' => 'Pending',
       'amount' => 4.56,
+      'description' => 'changed',
       'attachments' => [['test_attachment']],
     ];
 
@@ -187,6 +192,7 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       ->single();
 
     static::assertSame(4.56, $persistedExpenseLine['amount']);
+    static::assertSame('changed', $persistedExpenseLine['description']);
   }
 
   public function testAdditionalExpenseLinesRemoved(): void {
@@ -204,6 +210,7 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       'type_id' => 999,
       'status_id:name' => 'Pending',
       'amount' => 456,
+      'description' => NULL,
       'attachments' => [],
     ];
 
@@ -223,6 +230,7 @@ final class ExpensePersisterTest extends AbstractReimbursementHeadlessTestCase {
       ->single();
 
     static::assertSame(456.0, $persistedExpenseLine['amount']);
+    static::assertNull($persistedExpenseLine['description']);
   }
 
 }

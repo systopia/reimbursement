@@ -63,7 +63,7 @@ final class ExpenseLoaderTest extends AbstractReimbursementHeadlessTestCase {
       ->with('Expense', $expense['id'])
       ->willReturn($attachments);
 
-    ExpenseLineFixture::addFixture($expense['id'], 1.23);
+    ExpenseLineFixture::addFixture($expense['id'], 1.23, ['description' => 'test']);
     $expenses = $this->expenseLoader->getExpensesByCaseId($case['id']);
     static::assertCount(1, $expenses);
     static::assertSame($expense['id'], $expenses[0]['id']);
@@ -73,6 +73,7 @@ final class ExpenseLoaderTest extends AbstractReimbursementHeadlessTestCase {
     static::assertSame(999, $expenses[0]['type_id']);
     static::assertSame('2025-08-14', $expenses[0]['date']);
     static::assertSame(1.23, $expenses[0]['amount']);
+    static::assertSame('test', $expenses[0]['description']);
     static::assertSame($attachments, $expenses[0]['attachments']);
 
     // If there's more than one expense line only the first one is returned.

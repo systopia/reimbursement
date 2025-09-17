@@ -46,6 +46,10 @@ function reimbursement_civicrm_container(ContainerBuilder $container): void {
   $container->autowire(CaseTypeConfigManager::class);
   $container->autowire(ReimbursementProfile::class)
     ->addTag(ReimbursementProfile::SERVICE_TAG);
+
+  if (function_exists('_reimbursement_test_civicrm_container')) {
+    _reimbursement_test_civicrm_container($container);
+  }
 }
 
 /**

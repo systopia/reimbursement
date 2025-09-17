@@ -65,6 +65,10 @@ final class ExpensePersister {
       assert(is_float($amount) || is_int($amount));
       unset($expense['amount']);
 
+      $description = $expense['description'];
+      assert(NULL === $description || is_string($description));
+      unset($expense['description']);
+
       $attachments = $expense['attachments'];
       assert(is_array($attachments));
       unset($expense['attachments']);
@@ -80,7 +84,7 @@ final class ExpensePersister {
         $expenseId = $this->api4->createEntity('Expense', $expense)->single()['id'];
       }
 
-      $this->persistExpenseLine($amount, $expenseId);
+      $this->persistExpenseLine($amount, $description, $expenseId);
       // @phpstan-ignore argument.type
       $this->persistAttachments($attachments, $expenseId, $contactId);
 
@@ -97,7 +101,7 @@ final class ExpensePersister {
   /**
    * @throws \CRM_Core_Exception
    */
-  private function persistExpenseLine(int|float $amount, int $expenseId): void {
+  private function persistExpenseLine(int|float $amount, ?string $description, int $expenseId): void {
     /** @var list<array<string, mixed>> $currentExpenseLines */
     $currentExpenseLines = $this->api4->getEntities(
       'ExpenseLine',
@@ -107,7 +111,11 @@ final class ExpensePersister {
     if (isset($currentExpenseLines[0]['id'])) {
       /** @var int $expenseLineId */
       $expenseLineId = $currentExpenseLines[0]['id'];
-      $this->api4->updateEntity('ExpenseLine', $expenseLineId, ['amount' => $amount]);
+      $this->api4->updateEntity(
+        'ExpenseLine',
+        $expenseLineId,
+        ['amount' => $amount, 'description' => $description]
+      )->single();
 
       if (count($currentExpenseLines) > 1) {
         // May happen if an additional expense line was added in CiviCRM.
@@ -125,6 +133,7 @@ final class ExpensePersister {
       $this->api4->createEntity('ExpenseLine', [
         'expense_id' => $expenseId,
         'amount' => $amount,
+        'description' => $description,
       ]);
     }
   }
