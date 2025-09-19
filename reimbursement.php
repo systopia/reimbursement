@@ -2,6 +2,7 @@
 declare(strict_types = 1);
 
 use Civi\Reimbursement\CaseTypeConfigManager;
+use Civi\Reimbursement\EventSubscriber\ExpenseLineSubscriber;
 use Civi\Reimbursement\ExpenseLoader;
 use Civi\Reimbursement\ExpensePersister;
 use Civi\Reimbursement\Form\ReimbursementCreateDataTransformerFactory;
@@ -46,6 +47,9 @@ function reimbursement_civicrm_container(ContainerBuilder $container): void {
   $container->autowire(CaseTypeConfigManager::class);
   $container->autowire(ReimbursementProfile::class)
     ->addTag(ReimbursementProfile::SERVICE_TAG);
+
+  $container->autowire(ExpenseLineSubscriber::class)
+    ->addTag('kernel.event_subscriber');
 
   if (function_exists('_reimbursement_test_civicrm_container')) {
     _reimbursement_test_civicrm_container($container);

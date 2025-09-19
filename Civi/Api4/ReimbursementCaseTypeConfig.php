@@ -12,7 +12,10 @@ namespace Civi\Api4;
  */
 final class ReimbursementCaseTypeConfig extends Generic\DAOEntity {
 
-  public static function permissions() {
+  /**
+   * @return array<string, array<string|string[]>>
+   */
+  public static function permissions(): array {
     return CaseType::permissions();
   }
 

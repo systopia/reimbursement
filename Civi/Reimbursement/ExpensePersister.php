@@ -64,6 +64,7 @@ final class ExpensePersister {
       $amount = $expense['amount'];
       assert(is_float($amount) || is_int($amount));
       unset($expense['amount']);
+      $amount = (float) $amount;
 
       $description = $expense['description'];
       assert(NULL === $description || is_string($description));
@@ -77,14 +78,20 @@ final class ExpensePersister {
       if (isset($expense['id'])) {
         $expenseId = $expense['id'];
         assert(is_int($expenseId));
-        $this->api4->updateEntity('Expense', $expenseId, $expense)->single();
+        if (array_diff_assoc($expense, $currentExpensesById[$expenseId]) !== []) {
+          $this->api4->updateEntity('Expense', $expenseId, $expense)->single();
+        }
       }
       else {
         /** @var int $expenseId */
         $expenseId = $this->api4->createEntity('Expense', $expense)->single()['id'];
       }
 
-      $this->persistExpenseLine($amount, $description, $expenseId);
+      if ($amount !== ($currentExpensesById[$expenseId]['amount'] ?? NULL)
+        || $description !== ($currentExpensesById[$expenseId]['description'] ?? NULL)
+      ) {
+        $this->persistExpenseLine($amount, $description, $expenseId);
+      }
       // @phpstan-ignore argument.type
       $this->persistAttachments($attachments, $expenseId, $contactId);
 
@@ -101,7 +108,7 @@ final class ExpensePersister {
   /**
    * @throws \CRM_Core_Exception
    */
-  private function persistExpenseLine(int|float $amount, ?string $description, int $expenseId): void {
+  private function persistExpenseLine(float $amount, ?string $description, int $expenseId): void {
     /** @var list<array<string, mixed>> $currentExpenseLines */
     $currentExpenseLines = $this->api4->getEntities(
       'ExpenseLine',
