@@ -33,6 +33,18 @@ namespace Civi\Reimbursement;
  *   expense_status_id: int,
  *   save_button_label: string|null,
  *   submit_button_label: string|null,
+ *   subject_field_enabled: bool,
+ *   subject_field_label: string|null,
+ *   subject_field_description: string|null,
+ *   details_field_enabled: bool,
+ *   details_field_label: string|null,
+ *   details_field_description: string|null,
+ *   start_date_field_enabled: bool,
+ *   start_date_field_label: string|null,
+ *   start_date_field_description: string|null,
+ *   end_date_field_enabled: bool,
+ *   end_date_field_label: string|null,
+ *   end_date_field_description: string|null,
  * }
  */
 final class CaseTypeConfigData {
@@ -65,6 +77,30 @@ final class CaseTypeConfigData {
 
   private ?string $submitButtonLabel;
 
+  private bool $subjectFieldEnabled;
+
+  private ?string $subjectFieldLabel;
+
+  private string $subjectFieldDescription;
+
+  private bool $detailsFieldEnabled;
+
+  private ?string $detailsFieldLabel;
+
+  private string $detailsFieldDescription;
+
+  private bool $startDateFieldEnabled;
+
+  private ?string $startDateFieldLabel;
+
+  private string $startDateFieldDescription;
+
+  private bool $endDateFieldEnabled;
+
+  private ?string $endDateFieldLabel;
+
+  private string $endDateFieldDescription;
+
   /**
    * @phpstan-param caseTypeConfigDataT $data
    */
@@ -80,6 +116,22 @@ final class CaseTypeConfigData {
     $this->expenseStatusId = $data['expense_status_id'];
     $this->saveButtonLabel = $data['save_button_label'] === '' ? NULL : $data['save_button_label'];
     $this->submitButtonLabel = $data['submit_button_label'] === '' ? NULL : $data['submit_button_label'];
+
+    $this->subjectFieldEnabled = $data['subject_field_enabled'];
+    $this->subjectFieldLabel = $data['subject_field_label'] === '' ? NULL : $data['subject_field_label'];
+    $this->subjectFieldDescription = $data['subject_field_description'] ?? '';
+
+    $this->detailsFieldEnabled = $data['details_field_enabled'];
+    $this->detailsFieldLabel = $data['details_field_label'] === '' ? NULL : $data['details_field_label'];
+    $this->detailsFieldDescription = $data['details_field_description'] ?? '';
+
+    $this->startDateFieldEnabled = $data['start_date_field_enabled'];
+    $this->startDateFieldLabel = $data['start_date_field_label'] === '' ? NULL : $data['start_date_field_label'];
+    $this->startDateFieldDescription = $data['start_date_field_description'] ?? '';
+
+    $this->endDateFieldEnabled = $data['end_date_field_enabled'];
+    $this->endDateFieldLabel = $data['end_date_field_label'] === '' ? NULL : $data['end_date_field_label'];
+    $this->endDateFieldDescription = $data['end_date_field_description'] ?? '';
   }
 
   public function getId(): int {
@@ -130,6 +182,54 @@ final class CaseTypeConfigData {
 
   public function getSubmitButtonLabel(): ? string {
     return $this->submitButtonLabel;
+  }
+
+  public function isSubjectFieldEnabled(): bool {
+    return $this->subjectFieldEnabled;
+  }
+
+  public function getSubjectFieldLabel(): ?string {
+    return $this->subjectFieldLabel;
+  }
+
+  public function getSubjectFieldDescription(): string {
+    return $this->subjectFieldDescription;
+  }
+
+  public function isDetailsFieldEnabled(): bool {
+    return $this->detailsFieldEnabled;
+  }
+
+  public function getDetailsFieldLabel(): ?string {
+    return $this->detailsFieldLabel;
+  }
+
+  public function getDetailsFieldDescription(): string {
+    return $this->detailsFieldDescription;
+  }
+
+  public function isStartDateFieldEnabled(): bool {
+    return $this->startDateFieldEnabled;
+  }
+
+  public function getStartDateFieldLabel(): ?string {
+    return $this->startDateFieldLabel;
+  }
+
+  public function getStartDateFieldDescription(): string {
+    return $this->startDateFieldDescription;
+  }
+
+  public function isEndDateFieldEnabled(): bool {
+    return $this->endDateFieldEnabled;
+  }
+
+  public function getEndDateFieldLabel(): ?string {
+    return $this->endDateFieldLabel;
+  }
+
+  public function getEndDateFieldDescription(): string {
+    return $this->endDateFieldDescription;
   }
 
 }

@@ -24,6 +24,7 @@ use Civi\Core\SettingsBag;
 use Civi\Reimbursement\CaseTypeConfigData;
 use Civi\Reimbursement\Helper\ExpenseTypeLoader;
 use Civi\Reimbursement\Helper\FieldsLoader;
+use Civi\RemoteTools\Api4\Query\CompositeCondition;
 use Civi\RemoteTools\Form\FormSpec\Button\SubmitButton;
 use Civi\RemoteTools\Form\FormSpec\Field\AttachmentsField;
 use Civi\RemoteTools\Form\FormSpec\Field\CalculateField;
@@ -108,7 +109,9 @@ final class ReimbursementFormSpecFactory {
       );
     }
 
-    $caseFields = $this->fieldsLoader->getPublicCustomFields('Case', ['case_type_id' => $config->getCaseTypeId()]);
+    $caseFields = $this->getPrimaryCaseFields($config)
+      + $this->fieldsLoader->getPublicCustomFields('Case', ['case_type_id' => $config->getCaseTypeId()]);
+
     foreach ($caseFields as $caseField) {
       $formSpec->addElement(
         $this->formFieldFactory->createFormField($caseField, $entityValues)->setReadOnly($readOnly)
@@ -175,6 +178,62 @@ final class ReimbursementFormSpecFactory {
       ->setItemLayout(FieldListField::LAYOUT_VERTICAL)
       ->setAddButtonLabel(E::ts('Add %1', [1 => $typeLabel]))
       ->setRemoveButtonLabel(E::ts('Remove %1', [1 => $typeLabel]));
+  }
+
+  /**
+   * @return array<string, fieldT>
+   *
+   * @throws \CRM_Core_Exception
+   */
+  private function getPrimaryCaseFields(CaseTypeConfigData $config): array {
+    $fieldConfigs = [];
+
+    if ($config->isSubjectFieldEnabled()) {
+      $fieldConfigs['subject'] = [
+        $config->getSubjectFieldLabel(),
+        $config->getSubjectFieldDescription(),
+      ];
+    }
+    if ($config->isDetailsFieldEnabled()) {
+      $fieldConfigs['details'] = [
+        $config->getDetailsFieldLabel(),
+        $config->getDetailsFieldDescription(),
+      ];
+    }
+    if ($config->isStartDateFieldEnabled()) {
+      $fieldConfigs['start_date'] = [
+        $config->getStartDateFieldLabel(),
+        $config->getStartDateFieldDescription(),
+      ];
+    }
+    if ($config->isEndDateFieldEnabled()) {
+      $fieldConfigs['end_date'] = [
+        $config->getEndDateFieldLabel(),
+        $config->getEndDateFieldDescription(),
+      ];
+    }
+
+    if ([] === $fieldConfigs) {
+      return [];
+    }
+
+    $fields = $this->fieldsLoader->getFields(
+      'Case',
+      condition: CompositeCondition::fromFieldValuePairs(['name' => array_keys($fieldConfigs)])
+    );
+
+    // The fields in $fields might be in a different order than wanted, thus we
+    // use $returnFields.
+    $returnFields = [];
+    foreach ($fieldConfigs as $name => [$label, $description]) {
+      if (NULL !== $label) {
+        $fields[$name]['title'] = $label;
+      }
+      $fields[$name]['help_pre'] = $description;
+      $returnFields[$name] = $fields[$name];
+    }
+
+    return $returnFields;
   }
 
 }

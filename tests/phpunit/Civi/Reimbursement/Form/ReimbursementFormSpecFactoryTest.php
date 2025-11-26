@@ -51,19 +51,7 @@ final class ReimbursementFormSpecFactoryTest extends AbstractReimbursementHeadle
     $caseType = CaseType::get(FALSE)->addWhere('name', '=', 'reimbursement')->execute()->single();
     ExpenseTypeFixture::addFixture(333, 'ExpenseType');
 
-    $caseTypeConfig = new CaseTypeConfigData([
-      'id' => 111,
-      'case_type_id' => $caseType['id'],
-      'case_type_id:name' => 'reimbursement',
-      'case_type_id:label' => 'Test',
-      'initial_case_status_id' => 222,
-      'submit_case_status_id' => NULL,
-      'writable_case_status_ids' => [],
-      'expense_type_ids' => [333],
-      'expense_status_id' => 444,
-      'save_button_label' => 'Test Save',
-      'submit_button_label' => NULL,
-    ]);
+    $caseTypeConfig = $this->createConfig($caseType['id']);
 
     $formSpec = $this->formSpecFactory->createFormSpec($caseTypeConfig, NULL);
     static::assertSame('Reimbursement', $formSpec->getTitle());
@@ -74,7 +62,11 @@ final class ReimbursementFormSpecFactoryTest extends AbstractReimbursementHeadle
     static::assertSame('Test Save', $submitButtons['_action'][0]->getLabel());
 
     $fields = $formSpec->getFields();
-    static::assertCount(3, $fields);
+    static::assertSame([
+      'expenses_333',
+      '_expenses_333_total',
+      '_total',
+    ], array_keys($fields));
     static::assertSame('ExpenseType', $fields['expenses_333']->getLabel());
     static::assertInstanceOf(FieldListField::class, $fields['expenses_333']);
     static::assertFalse($fields['expenses_333']->isReadOnly());
@@ -102,6 +94,72 @@ final class ReimbursementFormSpecFactoryTest extends AbstractReimbursementHeadle
     static::assertTrue($fields['_expenses_333_total']->isHidden());
     static::assertInstanceOf(CalculateField::class, $fields['_total']);
     static::assertSame('Total in USD', $fields['_total']->getLabel());
+  }
+
+  public function testNewPrimaryCaseFields(): void {
+    $caseType = CaseType::get(FALSE)->addWhere('name', '=', 'reimbursement')->execute()->single();
+    ExpenseTypeFixture::addFixture(333, 'ExpenseType');
+
+    $caseTypeConfig = $this->createConfig($caseType['id'], [
+      'subject_field_enabled' => TRUE,
+      'subject_field_label' => 'Foo',
+      'subject_field_description' => 'Bar',
+      'details_field_enabled' => TRUE,
+      'start_date_field_enabled' => TRUE,
+      'end_date_field_enabled' => TRUE,
+    ]);
+
+    $formSpec = $this->formSpecFactory->createFormSpec($caseTypeConfig, NULL);
+    static::assertSame('Reimbursement', $formSpec->getTitle());
+
+    $fields = $formSpec->getFields();
+    static::assertSame([
+      'expenses_333',
+      '_expenses_333_total',
+      'subject',
+      'details',
+      'start_date',
+      'end_date',
+      '_total',
+    ], array_keys($fields));
+
+    static::assertSame('Foo', $fields['subject']->getLabel());
+    static::assertSame('Bar', $fields['subject']->getDescription());
+    static::assertSame('Details', $fields['details']->getLabel());
+    static::assertSame('Case Start Date', $fields['start_date']->getLabel());
+    static::assertSame('Case End Date', $fields['end_date']->getLabel());
+  }
+
+  /**
+   * @param array<string, mixed> $data
+   */
+  private function createConfig(int $caseTypeId, array $data = []): CaseTypeConfigData {
+    // @phpstan-ignore argument.type
+    return new CaseTypeConfigData($data + [
+      'id' => 111,
+      'case_type_id' => $caseTypeId,
+      'case_type_id:name' => 'reimbursement',
+      'case_type_id:label' => 'Test',
+      'initial_case_status_id' => 222,
+      'submit_case_status_id' => NULL,
+      'writable_case_status_ids' => [],
+      'expense_type_ids' => [333],
+      'expense_status_id' => 444,
+      'save_button_label' => 'Test Save',
+      'submit_button_label' => NULL,
+      'subject_field_enabled' => FALSE,
+      'subject_field_label' => NULL,
+      'subject_field_description' => '',
+      'details_field_enabled' => FALSE,
+      'details_field_label' => NULL,
+      'details_field_description' => '',
+      'start_date_field_enabled' => FALSE,
+      'start_date_field_label' => NULL,
+      'start_date_field_description' => '',
+      'end_date_field_enabled' => FALSE,
+      'end_date_field_label' => NULL,
+      'end_date_field_description' => '',
+    ]);
   }
 
 }

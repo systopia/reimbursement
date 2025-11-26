@@ -16,6 +16,26 @@
         <af-field name="save_button_label" />
         <af-field name="submit_button_label" af-if="([[&amp;quot;ReimbursementCaseTypeConfig1[0][fields][submit_case_status_id]&amp;quot;,&amp;quot;IS NOT EMPTY&amp;quot;]])" />
       </fieldset>
+      <fieldset class="af-container af-layout-cols af-container-style-pane">
+        <af-field name="subject_field_enabled" />
+        <af-field name="subject_field_label" />
+        <af-field name="subject_field_description" />
+      </fieldset>
+      <fieldset class="af-container af-layout-cols af-container-style-pane">
+        <af-field name="details_field_enabled" />
+        <af-field name="details_field_label" />
+        <af-field name="details_field_description" />
+      </fieldset>
+      <fieldset class="af-container af-layout-cols af-container-style-pane">
+        <af-field name="start_date_field_enabled" />
+        <af-field name="start_date_field_label" />
+        <af-field name="start_date_field_description" />
+      </fieldset>
+      <fieldset class="af-container af-layout-cols af-container-style-pane">
+        <af-field name="end_date_field_enabled" />
+        <af-field name="end_date_field_label" />
+        <af-field name="end_date_field_description" />
+      </fieldset>
     </div>
   </fieldset>
   <button class="af-button btn btn-primary" crm-icon="fa-check" ng-click="afform.submit()" ng-if="afform.showSubmitButton">{{:: ts('Submit') }}</button>
