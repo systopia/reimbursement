@@ -56,6 +56,7 @@ final class ExpenseLineSubscriberTest extends AbstractReimbursementHeadlessTestC
     static::assertSame('expense_line_added', $addActivity['activity_type_id:name']);
     static::assertSame('Completed', $addActivity['status_id:name']);
     static::assertSame($case['id'], $addActivity['case_id']);
+    // @phpstan-ignore encapsedStringPart.nonString
     static::assertSame("Expense Line Added (ID: {$expenseLine['id']})", $addActivity['subject']);
     static::assertSame($expense['id'], $addActivity['reimbursement_expense_line.expense_id']);
     static::assertSame($expenseLine['id'], $addActivity['reimbursement_expense_line.expense_line_id']);
@@ -78,6 +79,7 @@ final class ExpenseLineSubscriberTest extends AbstractReimbursementHeadlessTestC
     static::assertSame('expense_line_updated', $updateActivity['activity_type_id:name']);
     static::assertSame('Completed', $updateActivity['status_id:name']);
     static::assertSame($case['id'], $updateActivity['case_id']);
+    // @phpstan-ignore encapsedStringPart.nonString
     static::assertSame("Expense Line Updated (ID: {$expenseLine['id']})", $updateActivity['subject']);
     static::assertSame($expense['id'], $updateActivity['reimbursement_expense_line.expense_id']);
     static::assertSame($expenseLine['id'], $updateActivity['reimbursement_expense_line.expense_line_id']);
