@@ -44,7 +44,7 @@ final class CustomFieldsHelper {
   public function getPublicFieldsOrderedByWeight(array $entityFields): array {
     $fieldsByCustomFieldId = array_column($entityFields, NULL, 'custom_field_id');
 
-    /** @var iterable<array<string, mixed>> $customFields */
+    /** @var iterable<array{id: int, is_required: bool}> $customFields */
     $customFields = $this->api4->execute('CustomField', 'get', [
       'select' => ['id', 'is_required'],
       'where' => [

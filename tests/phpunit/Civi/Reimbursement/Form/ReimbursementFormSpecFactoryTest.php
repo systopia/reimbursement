@@ -130,6 +130,32 @@ final class ReimbursementFormSpecFactoryTest extends AbstractReimbursementHeadle
     static::assertSame('Case End Date', $fields['end_date']->getLabel());
   }
 
+  public function testExpensesPlacementBelow(): void {
+    $caseType = CaseType::get(FALSE)->addWhere('name', '=', 'reimbursement')->execute()->single();
+    ExpenseTypeFixture::addFixture(333, 'ExpenseType');
+
+    $caseTypeConfig = $this->createConfig($caseType['id'], [
+      'expenses_placement' => ExpensesPlacement::BelowCaseFields->value,
+      'subject_field_enabled' => TRUE,
+    ]);
+
+    $formSpec = $this->formSpecFactory->createFormSpec($caseTypeConfig, NULL);
+    static::assertSame('Reimbursement', $formSpec->getTitle());
+
+    $submitButtons = $formSpec->getSubmitButtons();
+    static::assertSame(['_action'], array_keys($submitButtons));
+    static::assertCount(1, $submitButtons['_action']);
+    static::assertSame('Test Save', $submitButtons['_action'][0]->getLabel());
+
+    $fields = $formSpec->getFields();
+    static::assertSame([
+      'subject',
+      'expenses_333',
+      '_expenses_333_total',
+      '_total',
+    ], array_keys($fields));
+  }
+
   /**
    * @param array<string, mixed> $data
    */
@@ -159,6 +185,7 @@ final class ReimbursementFormSpecFactoryTest extends AbstractReimbursementHeadle
       'end_date_field_enabled' => FALSE,
       'end_date_field_label' => NULL,
       'end_date_field_description' => '',
+      'expenses_placement' => ExpensesPlacement::AboveCaseFields->value,
     ]);
   }
 

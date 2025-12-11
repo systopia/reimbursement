@@ -1,6 +1,7 @@
 <?php
 declare(strict_types = 1);
 
+use Civi\Reimbursement\Form\ExpensesPlacement;
 use CRM_Reimbursement_ExtensionUtil as E;
 
 return [
@@ -239,6 +240,15 @@ return [
       'data_type' => 'String',
       'input_attrs' => [
         'maxlength' => 255,
+      ],
+    ],
+    'expenses_placement' => [
+      'title' => E::ts('Placement of Expenses'),
+      'sql_type' => 'varchar(40)',
+      'input_type' => 'Select',
+      'required' => TRUE,
+      'pseudoconstant' => [
+        'callback' => fn () => [...ExpensesPlacement::labels()],
       ],
     ],
   ],

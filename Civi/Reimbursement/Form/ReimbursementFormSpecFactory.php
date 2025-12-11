@@ -84,6 +84,7 @@ final class ReimbursementFormSpecFactory {
     /** @var array<string, mixed> $expense */
     // @phpstan-ignore foreach.nonIterable
     foreach ($entityValues['expenses'] ?? [] as $expense) {
+      // @phpstan-ignore offsetAccess.invalidOffset
       $expensesByTypeId[$expense['type_id']][] = $expense;
     }
 
@@ -117,12 +118,16 @@ final class ReimbursementFormSpecFactory {
       )->setDefaultValue(0)
     );
 
+    $fieldIndex = $config->getExpensesPlacement() === ExpensesPlacement::AboveCaseFields
+      ? count($formSpec->getElements()) : 0;
+
     $caseFields = $this->getPrimaryCaseFields($config)
       + $this->fieldsLoader->getPublicCustomFields('Case', ['case_type_id' => $config->getCaseTypeId()]);
 
     foreach ($caseFields as $caseField) {
-      $formSpec->addElement(
-        $this->formFieldFactory->createFormField($caseField, $entityValues)->setReadOnly($readOnly)
+      $formSpec->insertElement(
+        $this->formFieldFactory->createFormField($caseField, $entityValues)->setReadOnly($readOnly),
+        $fieldIndex++
       );
     }
 
@@ -233,6 +238,7 @@ final class ReimbursementFormSpecFactory {
       $returnFields[$name] = $fields[$name];
     }
 
+    // @phpstan-ignore return.type
     return $returnFields;
   }
 

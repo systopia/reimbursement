@@ -20,7 +20,11 @@ declare(strict_types = 1);
 
 namespace Civi\Reimbursement;
 
+use Civi\Reimbursement\Form\ExpensesPlacement;
+
 /**
+ * @phpstan-type expensesPlacementT "above_case_fields"|"below_case_fields"
+ *
  * @phpstan-type caseTypeConfigDataT array{
  *   id: int,
  *   case_type_id: int,
@@ -45,6 +49,7 @@ namespace Civi\Reimbursement;
  *   end_date_field_enabled: bool,
  *   end_date_field_label: string|null,
  *   end_date_field_description: string|null,
+ *   expenses_placement: string,
  * }
  */
 final class CaseTypeConfigData {
@@ -101,10 +106,15 @@ final class CaseTypeConfigData {
 
   private string $endDateFieldDescription;
 
+  private ExpensesPlacement $expensesPlacement;
+
   /**
    * @phpstan-param caseTypeConfigDataT $data
+   *
+   * phpcs:disable Generic.Metrics.CyclomaticComplexity.TooHigh
    */
   public function __construct(array $data) {
+  // phpcs:enable
     $this->id = $data['id'];
     $this->caseTypeId = $data['case_type_id'];
     $this->caseTypeName = $data['case_type_id:name'];
@@ -132,6 +142,9 @@ final class CaseTypeConfigData {
     $this->endDateFieldEnabled = $data['end_date_field_enabled'];
     $this->endDateFieldLabel = $data['end_date_field_label'] === '' ? NULL : $data['end_date_field_label'];
     $this->endDateFieldDescription = $data['end_date_field_description'] ?? '';
+
+    $this->expensesPlacement = ExpensesPlacement::tryFrom($data['expenses_placement'])
+      ?? ExpensesPlacement::AboveCaseFields;
   }
 
   public function getId(): int {
@@ -230,6 +243,10 @@ final class CaseTypeConfigData {
 
   public function getEndDateFieldDescription(): string {
     return $this->endDateFieldDescription;
+  }
+
+  public function getExpensesPlacement(): ExpensesPlacement {
+    return $this->expensesPlacement;
   }
 
 }

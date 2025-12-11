@@ -13,6 +13,7 @@
         <af-field name="expense_status_id" />
       </fieldset>
       <fieldset class="af-container af-layout-cols af-container-style-pane">
+        <af-field name="expenses_placement" defn="{required: true, input_attrs: {}, afform_default: 'above_case_fields'}" />
         <af-field name="save_button_label" />
         <af-field name="submit_button_label" af-if="([[&amp;quot;ReimbursementCaseTypeConfig1[0][fields][submit_case_status_id]&amp;quot;,&amp;quot;IS NOT EMPTY&amp;quot;]])" />
       </fieldset>

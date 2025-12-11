@@ -57,6 +57,7 @@ final class ExpensePersister {
 
     $expenseIds = [];
     foreach ($expenses as $expense) {
+      // @phpstan-ignore offsetAccess.invalidOffset
       if (isset($expense['id']) && !isset($currentExpensesById[$expense['id']])) {
         unset($expense['id']);
       }
