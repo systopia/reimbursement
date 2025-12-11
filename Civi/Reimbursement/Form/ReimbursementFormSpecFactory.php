@@ -109,6 +109,14 @@ final class ReimbursementFormSpecFactory {
       );
     }
 
+    $formSpec->addElement(
+      (new CalculateField(
+        '_total',
+        E::ts('Total in %1', [1 => $this->settings->get('defaultCurrency')]),
+        '{' . implode('} + {', $totalFieldNames) . '}')
+      )->setDefaultValue(0)
+    );
+
     $caseFields = $this->getPrimaryCaseFields($config)
       + $this->fieldsLoader->getPublicCustomFields('Case', ['case_type_id' => $config->getCaseTypeId()]);
 
@@ -117,14 +125,6 @@ final class ReimbursementFormSpecFactory {
         $this->formFieldFactory->createFormField($caseField, $entityValues)->setReadOnly($readOnly)
       );
     }
-
-    $formSpec->addElement(
-      (new CalculateField(
-        '_total',
-        E::ts('Total in %1', [1 => $this->settings->get('defaultCurrency')]),
-        '{' . implode('} + {', $totalFieldNames) . '}')
-      )->setDefaultValue(0)
-    );
 
     if (!$readOnly) {
       $formSpec->addElement(new SubmitButton('_action', 'save', $config->getSaveButtonLabel() ?? E::ts('Save')));
