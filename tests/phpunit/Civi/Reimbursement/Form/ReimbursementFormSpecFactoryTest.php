@@ -116,11 +116,11 @@ final class ReimbursementFormSpecFactoryTest extends AbstractReimbursementHeadle
     static::assertSame([
       'expenses_333',
       '_expenses_333_total',
+      '_total',
       'subject',
       'details',
       'start_date',
       'end_date',
-      '_total',
     ], array_keys($fields));
 
     static::assertSame('Foo', $fields['subject']->getLabel());
