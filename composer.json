@@ -20,7 +20,9 @@
     },
     "require": {
         "php": "^8.1",
-        "civicrm/civicrm-core": ">=6.5"
+        "civicrm/civicrm-core": ">=6.5",
+        "civicrm/civicrm-packages": ">=6.5",
+        "systopia/de.systopia.xcm": "*"
     },
     "autoload": {
         "classmap": ["ComposerHelper.php"]

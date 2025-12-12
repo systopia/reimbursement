@@ -24,6 +24,7 @@
     <ver>6.5</ver>
   </compatibility>
   <requires>
+    <ext>expenses</ext>
     <ext>remote_case</ext>
   </requires>
   <php_compatibility mode="semver">
