@@ -251,6 +251,50 @@ return [
         'callback' => fn () => [...ExpensesPlacement::labels()],
       ],
     ],
+    'expense_add_label' => [
+      'title' => E::ts('Expense Add Label'),
+      'description' => E::ts('This label, if given, will override the default one.'),
+      'sql_type' => 'varchar(100)',
+      'input_type' => 'Text',
+      'data_type' => 'String',
+      'input_attrs' => [
+        'maxlength' => 100,
+        'placeholder' => ts('Custom label'),
+      ],
+    ],
+    'expense_remove_label' => [
+      'title' => E::ts('Expense Remove Label'),
+      'description' => E::ts('This label, if given, will override the default one.'),
+      'sql_type' => 'varchar(100)',
+      'input_type' => 'Text',
+      'data_type' => 'String',
+      'input_attrs' => [
+        'maxlength' => 100,
+        'placeholder' => ts('Custom label'),
+      ],
+    ],
+    'attachment_add_label' => [
+      'title' => E::ts('Attachment Add Label'),
+      'description' => E::ts('This label, if given, will override the default one.'),
+      'sql_type' => 'varchar(100)',
+      'input_type' => 'Text',
+      'data_type' => 'String',
+      'input_attrs' => [
+        'maxlength' => 100,
+        'placeholder' => ts('Custom label'),
+      ],
+    ],
+    'attachment_remove_label' => [
+      'title' => E::ts('Attachment Remove Label'),
+      'description' => E::ts('This label, if given, will override the default one.'),
+      'sql_type' => 'varchar(100)',
+      'input_type' => 'Text',
+      'data_type' => 'String',
+      'input_attrs' => [
+        'maxlength' => 100,
+        'placeholder' => ts('Custom label'),
+      ],
+    ],
   ],
   'getIndices' => fn() => [
     'UI_case_type_id' => [
