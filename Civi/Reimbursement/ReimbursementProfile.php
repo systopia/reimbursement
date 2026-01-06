@@ -165,7 +165,7 @@ final class ReimbursementProfile extends AbstractRemoteEntityProfile {
   ): void {
     // @phpstan-ignore assign.propertyType
     $this->expenses = $entityValues['expenses'];
-    unset($entityValues['expenses']);
+    $entityValues['expenses'] = [];
   }
 
   /**
@@ -191,7 +191,7 @@ final class ReimbursementProfile extends AbstractRemoteEntityProfile {
   ): void {
     // @phpstan-ignore assign.propertyType
     $this->expenses = $newValues['expenses'];
-    unset($newValues['expenses']);
+    $newValues['expenses'] = [];
   }
 
   public function onPostUpdate(
