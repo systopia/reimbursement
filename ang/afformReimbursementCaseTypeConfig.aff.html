@@ -18,6 +18,12 @@
         <af-field name="submit_button_label" af-if="([[&amp;quot;ReimbursementCaseTypeConfig1[0][fields][submit_case_status_id]&amp;quot;,&amp;quot;IS NOT EMPTY&amp;quot;]])" />
       </fieldset>
       <fieldset class="af-container af-layout-cols af-container-style-pane">
+        <af-field name="expense_add_label" defn="{help_post: 'Placeholder: {expense_type}', input_attrs: {}}" />
+        <af-field name="expense_remove_label" defn="{help_post: 'Placeholder: {expense_type}', input_attrs: {}}" />
+        <af-field name="attachment_add_label" />
+        <af-field name="attachment_remove_label" />
+      </fieldset>
+      <fieldset class="af-container af-layout-cols af-container-style-pane">
         <af-field name="subject_field_enabled" />
         <af-field name="subject_field_label" />
         <af-field name="subject_field_description" />

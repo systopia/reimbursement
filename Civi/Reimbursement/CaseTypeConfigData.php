@@ -50,7 +50,13 @@ use Civi\Reimbursement\Form\ExpensesPlacement;
  *   end_date_field_label: string|null,
  *   end_date_field_description: string|null,
  *   expenses_placement: string,
+ *   expense_add_label: string|null,
+ *   expense_remove_label: string|null,
+ *   attachment_add_label: string|null,
+ *   attachment_remove_label: string|null,
  * }
+ *
+ * @codeCoverageIgnore
  */
 final class CaseTypeConfigData {
 
@@ -108,6 +114,14 @@ final class CaseTypeConfigData {
 
   private ExpensesPlacement $expensesPlacement;
 
+  private ?string $expenseAddLabel;
+
+  private ?string $expenseRemoveLabel;
+
+  private ?string $attachmentAddLabel;
+
+  private ?string $attachmentRemoveLabel;
+
   /**
    * @phpstan-param caseTypeConfigDataT $data
    *
@@ -145,6 +159,12 @@ final class CaseTypeConfigData {
 
     $this->expensesPlacement = ExpensesPlacement::tryFrom($data['expenses_placement'])
       ?? ExpensesPlacement::AboveCaseFields;
+
+    $this->expenseAddLabel = $data['expense_add_label'] === '' ? NULL : $data['expense_add_label'];
+    $this->expenseRemoveLabel = $data['expense_remove_label'] === '' ? NULL : $data['expense_remove_label'];
+
+    $this->attachmentAddLabel = $data['attachment_add_label'] === '' ? NULL : $data['attachment_add_label'];
+    $this->attachmentRemoveLabel = $data['attachment_remove_label'] === '' ? NULL : $data['attachment_remove_label'];
   }
 
   public function getId(): int {
@@ -247,6 +267,22 @@ final class CaseTypeConfigData {
 
   public function getExpensesPlacement(): ExpensesPlacement {
     return $this->expensesPlacement;
+  }
+
+  public function getExpenseAddLabel(): ?string {
+    return $this->expenseAddLabel;
+  }
+
+  public function getExpenseRemoveLabel(): ?string {
+    return $this->expenseRemoveLabel;
+  }
+
+  public function getAttachmentAddLabel(): ?string {
+    return $this->attachmentAddLabel;
+  }
+
+  public function getAttachmentRemoveLabel(): ?string {
+    return $this->attachmentRemoveLabel;
   }
 
 }
