@@ -31,6 +31,7 @@ use Civi\RemoteTools\Form\FormSpec\Field\CalculateField;
 use Civi\RemoteTools\Form\FormSpec\Field\FieldCollectionField;
 use Civi\RemoteTools\Form\FormSpec\Field\FieldListField;
 use Civi\RemoteTools\Form\FormSpec\Field\IntegerField;
+use Civi\RemoteTools\Form\FormSpec\FormElementContainer;
 use Civi\RemoteTools\Form\FormSpec\FormFieldFactoryInterface;
 use Civi\RemoteTools\Form\FormSpec\FormSpec;
 use CRM_Reimbursement_ExtensionUtil as E;
@@ -94,15 +95,18 @@ final class ReimbursementFormSpecFactory {
     $descriptionField = $this->fieldsLoader->getField('ExpenseLine', 'description');
     $totalFieldNames = [];
     $expenseTypes = $this->expenseTypeLoader->getExpenseTypes($config->getExpenseTypeIds());
+    $expensesContainer = new FormElementContainer();
+    $expensesContainer->addCssClass('reimbursement-expenses');
     foreach ($expenseTypes as $typeId => [$typeName, $typeLabel]) {
-      $formSpec->addElement($this->createExpenseTypeField($typeId, $typeLabel, $amountField, $descriptionField)
-        ->setDefaultValue($expensesByTypeId[$typeId] ?? [])
-        ->setReadOnly($readOnly)
+      $expensesContainer->addElement(
+        $this->createExpenseTypeField($typeId, $typeLabel, $amountField, $descriptionField)
+          ->setDefaultValue($expensesByTypeId[$typeId] ?? [])
+          ->setReadOnly($readOnly)
       );
 
       $totalFieldName = "_expenses_{$typeId}_total";
       $totalFieldNames[] = $totalFieldName;
-      $formSpec->addElement((new CalculateField(
+      $expensesContainer->addElement((new CalculateField(
         $totalFieldName, '', 'sum(map({expenses_' . $typeId . '}, "value.amount ?: 0"))'
         ))
         ->setDefaultValue(0)
@@ -110,7 +114,7 @@ final class ReimbursementFormSpecFactory {
       );
     }
 
-    $formSpec->addElement(
+    $expensesContainer->addElement(
       (new CalculateField(
         '_total',
         E::ts('Total in %1', [1 => $this->settings->get('defaultCurrency')]),
@@ -118,17 +122,25 @@ final class ReimbursementFormSpecFactory {
       )->setDefaultValue(0)
     );
 
-    $fieldIndex = $config->getExpensesPlacement() === ExpensesPlacement::AboveCaseFields
-      ? count($formSpec->getElements()) : 0;
+    $formSpec->addElement($expensesContainer);
+
+    $caseContainer = new FormElementContainer();
+    $caseContainer->addCssClass('reimbursement-case');
 
     $caseFields = $this->getPrimaryCaseFields($config)
       + $this->fieldsLoader->getPublicCustomFields('Case', ['case_type_id' => $config->getCaseTypeId()]);
 
     foreach ($caseFields as $caseField) {
-      $formSpec->insertElement(
-        $this->formFieldFactory->createFormField($caseField, $entityValues)->setReadOnly($readOnly),
-        $fieldIndex++
+      $caseContainer->addElement(
+        $this->formFieldFactory->createFormField($caseField, $entityValues)->setReadOnly($readOnly)
       );
+    }
+
+    if ($config->getExpensesPlacement() === ExpensesPlacement::AboveCaseFields) {
+      $formSpec->addElement($caseContainer);
+    }
+    else {
+      $formSpec->insertElement($caseContainer, 0);
     }
 
     if (!$readOnly) {
