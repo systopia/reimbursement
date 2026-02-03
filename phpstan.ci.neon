@@ -5,6 +5,7 @@ parameters:
 	scanDirectories:
 		- vendor/civicrm/civicrm-core/CRM
 		- vendor/civicrm/civicrm-core/ext/civi_case/Civi
+		- vendor/civicrm/civicrm-core/mixin/lib
 	bootstrapFiles:
 		- vendor/autoload.php
 	# Because we test with different versions in CI we may have unmatched errors.

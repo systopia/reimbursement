@@ -18,9 +18,64 @@
 
 declare(strict_types = 1);
 
+use CRM_Reimbursement_ExtensionUtil as E;
+
 /**
  * Collection of upgrade steps.
  */
 final class CRM_Reimbursement_Upgrader extends \CRM_Extension_Upgrader_Base {
+
+  /**
+   * Implements hook_civicrm_upgrade_N().
+   *
+   * Add the following columns to civicrm_reimbursement_case_type_config
+   * - expense_add_label
+   * - expense_remove_label
+   * - attachment_add_label
+   * - attachment_remove_label
+   */
+  public function upgrade_0001(): bool {
+    $this->ctx->log->info('Add expense_add_label column to civicrm_reimbursement_case_type_config');
+    E::schema()->alterSchemaField('ReimbursementCaseTypeConfig', 'expense_add_label', [
+      'title' => E::ts('Expense Add Label'),
+      'sql_type' => 'varchar(100)',
+      'input_type' => 'Text',
+      'required' => FALSE,
+      'description' => E::ts('This label, if given, will override the default one.'),
+      'default' => FALSE,
+    ]);
+
+    $this->ctx->log->info('Add expense_remove_label column to civicrm_reimbursement_case_type_config');
+    E::schema()->alterSchemaField('ReimbursementCaseTypeConfig', 'expense_remove_label', [
+      'title' => E::ts('Expense Remove Label'),
+      'sql_type' => 'varchar(100)',
+      'input_type' => 'Text',
+      'required' => FALSE,
+      'description' => E::ts('This label, if given, will override the default one.'),
+      'default' => FALSE,
+    ]);
+
+    $this->ctx->log->info('Add attachment_add_label column to civicrm_reimbursement_case_type_config');
+    E::schema()->alterSchemaField('ReimbursementCaseTypeConfig', 'attachment_add_label', [
+      'title' => E::ts('Attachment Add Label'),
+      'sql_type' => 'varchar(100)',
+      'input_type' => 'Text',
+      'required' => FALSE,
+      'description' => E::ts('This label, if given, will override the default one.'),
+      'default' => FALSE,
+    ]);
+
+    $this->ctx->log->info('Add attachment_remove_label column to civicrm_reimbursement_case_type_config');
+    E::schema()->alterSchemaField('ReimbursementCaseTypeConfig', 'attachment_remove_label', [
+      'title' => E::ts('Attachment Remove Label'),
+      'sql_type' => 'varchar(100)',
+      'input_type' => 'Text',
+      'required' => FALSE,
+      'description' => E::ts('This label, if given, will override the default one.'),
+      'default' => FALSE,
+    ]);
+
+    return TRUE;
+  }
 
 }
