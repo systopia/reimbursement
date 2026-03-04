@@ -51,7 +51,12 @@ final class ReimbursementFormSpecFactoryTest extends AbstractReimbursementHeadle
     $caseType = CaseType::get(FALSE)->addWhere('name', '=', 'reimbursement')->execute()->single();
     ExpenseTypeFixture::addFixture(333, 'ExpenseType');
 
-    $caseTypeConfig = $this->createConfig($caseType['id']);
+    $caseTypeConfig = $this->createConfig($caseType['id'], [
+      'expense_add_label' => 'New {expense_type}',
+      'expense_remove_label' => 'Delete {expense_type}',
+      'attachment_add_label' => 'Add',
+      'attachment_remove_label' => 'Remove',
+    ]);
 
     $formSpec = $this->formSpecFactory->createFormSpec($caseTypeConfig, NULL);
     static::assertSame('Reimbursement', $formSpec->getTitle());
@@ -70,6 +75,8 @@ final class ReimbursementFormSpecFactoryTest extends AbstractReimbursementHeadle
     static::assertSame('ExpenseType', $fields['expenses_333']->getLabel());
     static::assertInstanceOf(FieldListField::class, $fields['expenses_333']);
     static::assertFalse($fields['expenses_333']->isReadOnly());
+    static::assertSame('New ExpenseType', $fields['expenses_333']->getAddButtonLabel());
+    static::assertSame('Delete ExpenseType', $fields['expenses_333']->getRemoveButtonLabel());
 
     $itemField = $fields['expenses_333']->getItemField();
     static::assertInstanceOf(FieldCollectionField::class, $itemField);
@@ -89,6 +96,8 @@ final class ReimbursementFormSpecFactoryTest extends AbstractReimbursementHeadle
     static::assertInstanceOf(AttachmentsField::class, $itemField->getFields()[3]);
     static::assertSame('attachments', $itemField->getFields()[3]->getName());
     static::assertSame('Attachments', $itemField->getFields()[3]->getLabel());
+    static::assertSame('Add', $itemField->getFields()[3]->getAddButtonLabel());
+    static::assertSame('Remove', $itemField->getFields()[3]->getRemoveButtonLabel());
 
     static::assertInstanceOf(CalculateField::class, $fields['_expenses_333_total']);
     static::assertTrue($fields['_expenses_333_total']->isHidden());
@@ -186,6 +195,10 @@ final class ReimbursementFormSpecFactoryTest extends AbstractReimbursementHeadle
       'end_date_field_label' => NULL,
       'end_date_field_description' => '',
       'expenses_placement' => ExpensesPlacement::AboveCaseFields->value,
+      'expense_add_label' => NULL,
+      'expense_remove_label' => NULL,
+      'attachment_add_label' => NULL,
+      'attachment_remove_label' => NULL,
     ]);
   }
 

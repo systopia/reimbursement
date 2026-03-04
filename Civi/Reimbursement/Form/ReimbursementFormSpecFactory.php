@@ -99,7 +99,7 @@ final class ReimbursementFormSpecFactory {
     $expensesContainer->addCssClass('reimbursement-expenses');
     foreach ($expenseTypes as $typeId => [$typeName, $typeLabel]) {
       $expensesContainer->addElement(
-        $this->createExpenseTypeField($typeId, $typeLabel, $amountField, $descriptionField)
+        $this->createExpenseTypeField($config, $typeId, $typeLabel, $amountField, $descriptionField)
           ->setDefaultValue($expensesByTypeId[$typeId] ?? [])
           ->setReadOnly($readOnly)
       );
@@ -167,6 +167,7 @@ final class ReimbursementFormSpecFactory {
    * @throws \CRM_Core_Exception
    */
   private function createExpenseTypeField(
+    CaseTypeConfigData $config,
     int $typeId,
     string $typeLabel,
     array $amountField,
@@ -184,7 +185,11 @@ final class ReimbursementFormSpecFactory {
       $this->formFieldFactory->createFormField($amountField, NULL)->setMinimum(0)
     );
     $fieldCollectionField->addField($this->formFieldFactory->createFormField($descriptionField, NULL));
-    $fieldCollectionField->addField(new AttachmentsField('attachments', E::ts('Attachments')));
+    $fieldCollectionField->addField(
+      (new AttachmentsField('attachments', E::ts('Attachments')))
+        ->setAddButtonLabel($config->getAttachmentAddLabel() ?? '+')
+        ->setRemoveButtonLabel($config->getAttachmentRemoveLabel() ?? '-')
+    );
 
     $fields = $this->fieldsLoader->getPublicCustomFields('Expense', ['type_id' => $typeId]);
     foreach ($fields as $field) {
@@ -193,8 +198,16 @@ final class ReimbursementFormSpecFactory {
 
     return (new FieldListField("expenses_$typeId", $typeLabel, $fieldCollectionField))
       ->setItemLayout(FieldListField::LAYOUT_VERTICAL)
-      ->setAddButtonLabel(E::ts('Add %1', [1 => $typeLabel]))
-      ->setRemoveButtonLabel(E::ts('Remove %1', [1 => $typeLabel]));
+      ->setAddButtonLabel(str_replace(
+        '{expense_type}',
+        $typeLabel,
+        $config->getExpenseAddLabel() ?? E::ts('Add {expense_type}')
+      ))
+      ->setRemoveButtonLabel(str_replace(
+        '{expense_type}',
+        $typeLabel,
+        $config->getExpenseRemoveLabel() ?? E::ts('Remove {expense_type}')
+      ));
   }
 
   /**
