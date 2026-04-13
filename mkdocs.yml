@@ -8,6 +8,11 @@ theme:
 
 nav:
   - Introduction: index.md
+  - Installation: installation.md
+  - Features: features.md
+  - Components of an Application Workflow: components.md
+  - Usage: usage.md
+  - Configuration: configuration.md
 
 markdown_extensions:
   - attr_list
