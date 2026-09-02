@@ -89,6 +89,7 @@ class CRM_Reimbursement_ExtensionUtil {
 
 use CRM_Reimbursement_ExtensionUtil as E;
 
+pathload()->addSearchDir(__DIR__ . '/mixin/lib');
 spl_autoload_register('_reimbursement_civix_class_loader', TRUE, TRUE);
 
 function _reimbursement_civix_class_loader($class) {
