@@ -79,6 +79,7 @@ final class ExpensePersister {
       if (isset($expense['id'])) {
         $expenseId = $expense['id'];
         assert(is_int($expenseId));
+        // @phpstan-ignore argument.type, argument.type
         if (array_diff_assoc($expense, $currentExpensesById[$expenseId]) !== []) {
           $this->api4->updateEntity('Expense', $expenseId, $expense)->single();
         }

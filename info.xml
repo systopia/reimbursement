@@ -24,6 +24,8 @@
     <ver>6.5</ver>
   </compatibility>
   <requires>
+    <ext>civi_case</ext>
+    <ext>de.systopia.remotetools</ext>
     <ext>expenses</ext>
     <ext>remote_case</ext>
   </requires>
@@ -39,11 +41,11 @@
   </classloader>
   <civix>
     <namespace>CRM/Reimbursement</namespace>
-    <format>25.01.1</format>
+    <format>25.10.2</format>
     <angularModule>crmReimbursement</angularModule>
   </civix>
   <mixins>
-    <mixin>mgd-php@1.0.0</mixin>
+    <mixin>mgd-php@2.0.0</mixin>
     <mixin>entity-types-php@2.0.0</mixin>
     <mixin>afform-entity-php@1.0.0</mixin>
   </mixins>

@@ -40,10 +40,7 @@ enum ExpensesPlacement: string {
 
   public function label(): string {
     return match ($this) {
-      // https://github.com/voku/phpstan-rules/issues/42
-      // @phpstan-ignore voku.Match
       self::AboveCaseFields => E::ts('Above Case Fields'),
-      // @phpstan-ignore voku.Match
       self::BelowCaseFields => E::ts('Below Case Fields'),
     };
   }
